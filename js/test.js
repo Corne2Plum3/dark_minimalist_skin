@@ -44,7 +44,14 @@ function test_2() {
 	let jsZip = new JSZip();
 	let zip_fs = new zip.fs.FS();
 	
-	jsZip.file(getBase64(sendAudioFile("normal-hitnormal.wav")), "normal-hitnormal.wav", {base64 : true});
+	// loading a file and add it in a zip file
+    JSZipUtils.getBinaryContent("https://github.com/Corne2Plum3/dark_minimalist_skin/blob/main/audio/1/normal-hitnormal.wav", function (err, data) {
+      if(err) {
+      throw err; // or handle the error
+      }
+      // var zip = new JSZip();
+      jsZip.file("normal-hitnormal.wav", data, {binary:true});
+    });
 	
 	jsZip.generateAsync({type:"blob"}).then(function (content) {
 		content = URL.createObjectURL(content);
