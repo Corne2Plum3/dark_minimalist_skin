@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<link href="style.css" rel="stylesheet" type="text/css">
+	<script src="js/app.js" type="text/javascript"></script>
+	<script src="js/FileSaver.js" type="text/javascript"></script>
+	<script src="js/jszip.js" type="text/javascript"></script>
+	<script src="js/jszip-utils.js" type="text/javascript"></script>
+	<script src="js/zip-fs.min.js" type="text/javascript"></script>
+	
+	<script src="js/test.js" type="text/javascript"></script>
+</head>
+<body>
+	<div>
+		<div>
+			<input type="number" id="main_color_id_input" onchange="set_parameter('main_color_id', 0);" value="0" min="0" max="255" step="1">
+		</div>
+		<div>Circle
+			<input type="radio" id="circle_type_1" name="circle_type" onclick="set_parameter('circle_type',0);" checked>Type 1 (transparant)
+			<input type="radio" id="circle_type_2" name="circle_type" onclick="set_parameter('circle_type',1);">Type 2 (plain)
+			<input type="radio" id="circle_type_3" name="circle_type" onclick="set_parameter('circle_type',2);">Type 3 (ring)
+			<input type="radio" id="circle_type_4" name="circle_type" onclick="set_parameter('circle_type',3);">Type 4 (colored border)
+		</div>
+		<div>Spinner
+			<input type="radio" id="spinner_type_1" name="spinner_type" onclick="set_parameter('spinner_type',0);" checked>Spinner 1 (Big)
+			<input type="radio" id="spinner_type_2" name="spinner_type" onclick="set_parameter('spinner_type',1);">Spinner 2 (Small)
+		</div>
+		<div>Cursor color
+			<input type="radio" id="cursor_color_1" name="cursor_color" onclick="set_parameter('cursor_color',0);" checked>Same color
+			<input type="radio" id="cursor_color_2" name="cursor_color" onclick="set_parameter('cursor_color',1);">Complementary
+		</div>
+		<div>Cursor trail
+			<input type="radio" id="cursor_trail_1" name="cursor_trail" onclick="set_parameter('cursor_trail',0);" checked>OFF
+			<input type="radio" id="cursor_trail_2" name="cursor_trail" onclick="set_parameter('cursor_trail',1);">ON
+		</div>
+		<div>Score bar type (HP bar)
+			<input type="radio" id="scorebar_type_1" name="scorebar_type" onclick="set_parameter('scorebar_type',0);" checked>Type 1 (minimalist)
+			<input type="radio" id="scorebar_type_2" name="scorebar_type" onclick="set_parameter('scorebar_type',1);">Type 2 (with numbers)
+		</div>
+		<div>Hitsounds
+			<input type="radio" id="hitsounds_type_1" name="hitsounds_type" onclick="set_parameter('hitsounds_type',0);" checked>1
+			<input type="radio" id="hitsounds_type_2" name="hitsounds_type" onclick="set_parameter('hitsounds_type',1);">2
+		</div>
+		<div>
+			<input type="button" value="Generate canvas" onclick="generate_canvas();">
+			<input type="button" value="Generate skin" onclick="export_skin();">
+			<input type="button" value="test" onclick="test_2();">
+		</div>
+	</div>
+	<h1>Generated elements</h1>
+	<div id="generated_elements">
+		<div id="generated_elements_1x"></div>
+		<div id="generated_elements_2x"></div>
+	</div>
+	
+	<h1>Blank 1x1 files</h1>
+		<canvas id="blank_canvas" width="1" height="1" title="(all blank files)"></canvas>
+	
+	<h1>Temp</h1>
+	<div>
+		<canvas id="canvas_temp" title="canvas_temp"></canvas> <!-- Used by some drawing functions -->
+	</div>
+	
+	<h1>skin.ini</ht>
+	<pre id="skin_ini_content"></pre>
+</body>
+</html>
