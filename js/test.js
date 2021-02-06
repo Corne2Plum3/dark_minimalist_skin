@@ -45,7 +45,7 @@ function test_2() {
 	let zip_fs = new zip.fs.FS();
 	
 	// loading a file and add it in a zip file
-    JSZipUtils.getBinaryContent("Access-Control-Allow-Origin: https://mega.nz/file/y1NBHCrI#XDDTknG_anw5TqwKzAe0rx4eciiOaAIz6Cp-amzsBQk", function (err, data) {
+    JSZipUtils.getBinaryContent("Access-Control-Allow-Origin: https://github.com/Corne2Plum3/dark_minimalist_skin/blob/main/audio/1/normal-hitnormal.wav", function (err, data) {
       if(err) {
       throw err; // or handle the error
       }
