@@ -45,12 +45,12 @@ function test_2() {
 	let zip_fs = new zip.fs.FS();
 	
 	// loading a file and add it in a zip file
-    JSZipUtils.getBinaryContent("https://github.com/Corne2Plum3/dark_minimalist_skin/blob/main/audio/1/normal-hitnormal.wav", function (err, data) {
+    JSZipUtils.getBinaryContent("Access-Control-Allow-Origin: https://mega.nz/file/y1NBHCrI#XDDTknG_anw5TqwKzAe0rx4eciiOaAIz6Cp-amzsBQk", function (err, data) {
       if(err) {
       throw err; // or handle the error
       }
-      // var zip = new JSZip();
-      jsZip.file("normal-hitnormal.wav", data, {binary:true});
+      var zip = new JSZip();
+      zip.file("normal-hitnormal.wav", data, {binary:true});
     });
 	
 	jsZip.generateAsync({type:"blob"}).then(function (content) {

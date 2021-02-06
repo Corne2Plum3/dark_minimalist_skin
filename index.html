@@ -12,40 +12,134 @@
 	<script src="js/test.js" type="text/javascript"></script>
 </head>
 <body>
-	<div>
-		<div>
-			<input type="number" id="main_color_id_input" onchange="set_parameter('main_color_id', 0);" value="0" min="0" max="255" step="1">
+	<div id="top_container">
+		<div class="logo">
+			<span class="logo_colored_letter">D</span>ark <span class="logo_colored_letter">M</span>inimalist <span class="logo_colored_letter">S</span>kin
 		</div>
-		<div>Circle
-			<input type="radio" id="circle_type_1" name="circle_type" onclick="set_parameter('circle_type',0);" checked>Type 1 (transparant)
-			<input type="radio" id="circle_type_2" name="circle_type" onclick="set_parameter('circle_type',1);">Type 2 (plain)
-			<input type="radio" id="circle_type_3" name="circle_type" onclick="set_parameter('circle_type',2);">Type 3 (ring)
-			<input type="radio" id="circle_type_4" name="circle_type" onclick="set_parameter('circle_type',3);">Type 4 (colored border)
+		<div class="logo_text">
+			minimalist osu! skin by Corne2Plum3
 		</div>
-		<div>Spinner
-			<input type="radio" id="spinner_type_1" name="spinner_type" onclick="set_parameter('spinner_type',0);" checked>Spinner 1 (Big)
-			<input type="radio" id="spinner_type_2" name="spinner_type" onclick="set_parameter('spinner_type',1);">Spinner 2 (Small)
+	</div>
+	
+	<div id="top_container_placeholder"></div>
+	
+	<div id="all_input_container">
+		<div id="left_container">
+			<div id="left_container_id_input">
+				<div>
+					<input type="text" id="id_input" onchange="set_parameter('skin_id',0);">
+				</div>
+				<div id="error_message_id_input">
+					'00000' isn't a valid number.
+				</div>
+			</div>
+			<div id="left_container_options_buttons">
+				<div>
+					<span class="input_title">01. Color</span><br>
+					<label>Color:</label>
+					<select name="color_picker_0" id="color_picker_0" class="color_picker_selector" onchange="set_parameter('main_color_id',0);">
+						<option value="0">Red</option>
+						<option value="1">Pink</option>
+						<option value="2">Purple</option>
+						<option value="3">Deep purple</option>
+						<option value="4">Indigo</option>
+						<option value="5">Blue</option>
+						<option value="6">Light blue</option>
+						<option value="7">Cyan</option>
+						<option value="8">Teal</option>
+						<option value="9">Green</option>
+						<option value="10">Light green</option>
+						<option value="11">Lime</option>
+						<option value="12">Yellow</option>
+						<option value="13">Amber</option>
+						<option value="14">Orange</option>
+						<option value="15">Deep orange</option>
+						<option value="16">Brown</option>
+						<option value="17">Gray</option>
+						<option value="18">Blue gray</option>
+					</select>
+				</div>
+				<div id="color_picker_buttons_container">
+					<input type="button" id="color_picker_1" class="color_picker_button" onclick="set_parameter('main_color_id',1);">
+					<input type="button" id="color_picker_2" class="color_picker_button" onclick="set_parameter('main_color_id',2);">
+					<input type="button" id="color_picker_3" class="color_picker_button" onclick="set_parameter('main_color_id',3);">
+					<input type="button" id="color_picker_4" class="color_picker_button" onclick="set_parameter('main_color_id',4);">
+					<input type="button" id="color_picker_5" class="color_picker_button" onclick="set_parameter('main_color_id',5);">
+					<input type="button" id="color_picker_6" class="color_picker_button" onclick="set_parameter('main_color_id',6);">
+					<input type="button" id="color_picker_7" class="color_picker_button" onclick="set_parameter('main_color_id',7);">
+					<input type="button" id="color_picker_8" class="color_picker_button" onclick="set_parameter('main_color_id',8);">
+					<input type="button" id="color_picker_9" class="color_picker_button" onclick="set_parameter('main_color_id',9);">
+					<input type="button" id="color_picker_10" class="color_picker_button" onclick="set_parameter('main_color_id',10);">
+					<input type="button" id="color_picker_11" class="color_picker_button" onclick="set_parameter('main_color_id',11);">
+					<input type="button" id="color_picker_12" class="color_picker_button" onclick="set_parameter('main_color_id',12);">
+					<input type="button" id="color_picker_13" class="color_picker_button" onclick="set_parameter('main_color_id',13);">
+					<input type="button" id="color_picker_14" class="color_picker_button" onclick="set_parameter('main_color_id',14);">
+				</div>
+			</div>
+			<div id="left_container_color_picker">
+				<input type="button" value="Generate canvas" onclick="generate_canvas();" class="export_button">
+				<input type="button" value="Generate skin" onclick="export_skin();" class="export_button">
+				<input type="button" value="test" onclick="test_2();" class="export_button">
+			</div>
 		</div>
-		<div>Cursor color
-			<input type="radio" id="cursor_color_1" name="cursor_color" onclick="set_parameter('cursor_color',0);" checked>Same color
-			<input type="radio" id="cursor_color_2" name="cursor_color" onclick="set_parameter('cursor_color',1);">Complementary
-		</div>
-		<div>Cursor trail
-			<input type="radio" id="cursor_trail_1" name="cursor_trail" onclick="set_parameter('cursor_trail',0);" checked>OFF
-			<input type="radio" id="cursor_trail_2" name="cursor_trail" onclick="set_parameter('cursor_trail',1);">ON
-		</div>
-		<div>Score bar type (HP bar)
-			<input type="radio" id="scorebar_type_1" name="scorebar_type" onclick="set_parameter('scorebar_type',0);" checked>Type 1 (minimalist)
-			<input type="radio" id="scorebar_type_2" name="scorebar_type" onclick="set_parameter('scorebar_type',1);">Type 2 (with numbers)
-		</div>
-		<div>Hitsounds
-			<input type="radio" id="hitsounds_type_1" name="hitsounds_type" onclick="set_parameter('hitsounds_type',0);" checked>1
-			<input type="radio" id="hitsounds_type_2" name="hitsounds_type" onclick="set_parameter('hitsounds_type',1);">2
-		</div>
-		<div>
-			<input type="button" value="Generate canvas" onclick="generate_canvas();">
-			<input type="button" value="Generate skin" onclick="export_skin();">
-			<input type="button" value="test" onclick="test_2();">
+		<div id="right_container">
+			<div class="right_input_container">
+				<span class="input_title">02. Circle</span><br>
+				<input type="radio" id="circle_type_1" name="circle_type" onclick="set_parameter('circle_type',0);"><canvas id="preview_circle_1" class="preview_canvas" width="100" height="100">Type 1 (transparant)</canvas>
+				<input type="radio" id="circle_type_2" name="circle_type" onclick="set_parameter('circle_type',1);"><canvas id="preview_circle_2" class="preview_canvas" width="100" height="100">Type 2 (plain)</canvas>
+				<input type="radio" id="circle_type_3" name="circle_type" onclick="set_parameter('circle_type',2);"><canvas id="preview_circle_3" class="preview_canvas" width="100" height="100">Type 3 (ring)</canvas>
+				<input type="radio" id="circle_type_4" name="circle_type" onclick="set_parameter('circle_type',3);"><canvas id="preview_circle_4" class="preview_canvas" width="100" height="100">Type 4 (colored border)</canvas>
+			</div>
+			<div class="right_input_container">
+				<span class="input_title">03. Spinner</span><br>
+				<input type="radio" id="spinner_type_1" name="spinner_type" onclick="set_parameter('spinner_type',0);"><canvas id="preview_spinner_1" class="preview_canvas" width="128" height="128">Spinner 1 (Big)</canvas>
+				<input type="radio" id="spinner_type_2" name="spinner_type" onclick="set_parameter('spinner_type',1);"><canvas id="preview_spinner_2" class="preview_canvas" width="128" height="128">Spinner 2 (Small)</canvas>
+			</div>
+			<div class="right_input_container">
+				<span class="input_title">04. Cursor</span><br>
+				<div class="right_input_subcontainer">
+					<div class="right_input_subcontainer_1">
+						<u>Cursor color:</u><br>
+						<label><input type="radio" id="cursor_color_1" name="cursor_color" onclick="set_parameter('cursor_color',0);"><b><span id="preview_cursor_color_1" class="preview_cursor_color">&#x2B24;</span></b> Default</label><br>
+						<label><input type="radio" id="cursor_color_2" name="cursor_color" onclick="set_parameter('cursor_color',1);"><b><span id="preview_cursor_color_2" class="preview_cursor_color">&#x2B24;</span></b> Complementary</label>
+					</div>
+					<div class="right_input_subcontainer_2">
+						<u>Cursor trail:</u><br>
+						<input type="radio" id="cursor_trail_1" name="cursor_trail" onclick="set_parameter('cursor_trail',0);"><label>OFF</label><br>
+						<input type="radio" id="cursor_trail_2" name="cursor_trail" onclick="set_parameter('cursor_trail',1);"><label>ON</label><br>
+					</div>
+				</div>
+			</div>
+			<div class="right_input_container">
+				<span class="input_title">05. HP Bar</span><br>
+				<div class="right_input_subcontainer">
+					<div class="right_input_subcontainer_1">
+						<input type="radio" id="scorebar_type_1" name="scorebar_type" onclick="set_parameter('scorebar_type',0);"><label>Without numbers</label><br>
+						<input type="radio" id="scorebar_type_2" name="scorebar_type" onclick="set_parameter('scorebar_type',1);"><label>With numbers</label><br>
+					</div>
+					<div class="right_input_subcontainer_2">
+						<canvas id="preview_scorebar" class="preview_canvas" width="432" height="56" title="This HP bar isn't 100% accurate."></canvas>
+					</div>
+				</div>
+			</div>
+			<div class="right_input_container">
+				<span class="input_title">06. Sounds</span><br>
+				<div class="right_input_subcontainer">
+					<div class="right_input_subcontainer_1">
+						<input type="radio" id="hitsounds_type_1" name="hitsounds_type" onclick="set_parameter('hitsounds_type',0);"><label>Type 1</label><br>
+						<input type="radio" id="hitsounds_type_2" name="hitsounds_type" onclick="set_parameter('hitsounds_type',1);"><label>Type 2</label><br>
+					</div>
+					<div class="right_input_subcontainer_2">
+						<input type="button" onclick="play_sound(0);" value="normal hit" class="hitsound_button">
+						<input type="button" onclick="play_sound(2);" value="soft hit" class="hitsound_button">
+						<input type="button" onclick="play_sound(4);" value="drum hit" class="hitsound_button">
+						<br>
+						<input type="button" onclick="play_sound(1);" value="normal finish" class="hitsound_button">
+						<input type="button" onclick="play_sound(3);" value="soft finish" class="hitsound_button">
+						<input type="button" onclick="play_sound(5);" value="drum finish" class="hitsound_button">
+					</div>
+				</div>
+			</div>
 		</div>
 	</div>
 	<h1>Generated elements</h1>

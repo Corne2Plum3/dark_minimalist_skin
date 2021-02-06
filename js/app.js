@@ -1,11 +1,16 @@
+/* version of the program */
+var version = "1.0";
+
 /* inputs var */
-var main_color_id = 0;  // main color id (0-253)
-var circle_type = 0; // type of circle (0-3)
-var spinner_type = 0; // type of spinner (0-1)
-var cursor_color = 0; // type of cursor color (0-1)
-var cursor_trail = 0; // enable or disable cursor trail (0-1)
-var scorebar_type = 0; // the type of HP bar (0-1)
-var hitsounds_type = 0; // type of hitsounds in gameplay (0-1)
+var main_color_id;  // main color id (0-253)
+var circle_type; // type of circle (0-3)
+var spinner_type; // type of spinner (0-1)
+var cursor_color; // type of cursor color (0-1)
+var cursor_trail; // enable or disable cursor trail (0-1)
+var scorebar_type; // the type of HP bar (0-1)
+var hitsounds_type; // type of hitsounds in gameplay (0-1)
+
+var old_skin_id = 717; // skin id before set the id input
 
 /* font */
 var font_normal = "'Gordita Medium'"; // the name should be in '' if he have spaces
@@ -22,10 +27,12 @@ const color_B = "#00b0ff"; // lightblue A400 normal
 const color_C = "#d500f9"; // purple A400 normal
 const color_D = "#ff1744"; // red A400 normal
 
-var main_color;
+var main_color; // used to get the hex main color
 
 /* consts */
-const elements_2x = [ // file name (without @2x.png) + canvas name + width + height (width and height for 2x versions!!!!)
+const max_id = 32512; // highest id possible
+
+const elements_2x = [ // file name (without @2x.png) + canvas name + width + height [+ optional parameters (list) for draw_element()] (width and height for 2x versions!!!!)
 	["approachcircle","approachcircle",256,256],
 	["arrow-warning","arrow_warning",260,200],
 	["button-left", "button_left",16,154],
@@ -47,16 +54,16 @@ const elements_2x = [ // file name (without @2x.png) + canvas name + width + hei
 	["count3","count3",450,450],
 	["cursor","cursor",256,256],
 	["cursortrail","cursortrail",256,256],
-	["default-0","default_0",70,100],
-	["default-1","default_1",70,100],
-	["default-2","default_2",70,100],
-	["default-3","default_3",70,100],
-	["default-4","default_4",70,100],
-	["default-5","default_5",70,100],
-	["default-6","default_6",70,100],
-	["default-7","default_7",70,100],
-	["default-8","default_8",70,100],
-	["default-9","default_9",70,100],
+	["default-0","default_0",90,120],
+	["default-1","default_1",90,120],
+	["default-2","default_2",90,120],
+	["default-3","default_3",90,120],
+	["default-4","default_4",90,120],
+	["default-5","default_5",90,120],
+	["default-6","default_6",90,120],
+	["default-7","default_7",90,120],
+	["default-8","default_8",90,120],
+	["default-9","default_9",90,120],
 	["fail-background","fail_background",2732,1536],
 	["followpoint-0","followpoint_0",256,60],
 	["followpoint-1","followpoint_1",256,60],
@@ -209,7 +216,7 @@ const elements_2x = [ // file name (without @2x.png) + canvas name + width + hei
 	["sliderfollowcircle","sliderfollowcircle",512,512],
 	["sliderscorepoint","sliderscorepoint",36,36],
 	["spinner-approachcircle","spinner_approachcircle",630,630],
-	["spinner-circle","spinner_circle",1200,1200],
+	["spinner-circle","spinner_circle",1150,1150],
 	["spinner-clear","spinner_clear",180,380],
 	["spinner-metre","spinner_metre",2048,1384],
 	["spinner-rpm","spinner_rpm",560,112],
@@ -272,9 +279,16 @@ const material = [
 const material_colors = ["Red","Pink","Purple","Deep Purple","Indigo","Blue","Light blue","Cyan","Teal","Green","Light green","Lime","Yellow","Amber","Orange","Deep orange","Brown","Gray","Blue gray"]; // list of all colors names
 const material_shades = ["50","100","200","300","400","500","600","700","800","900","A100","A200","A400","A700"]; // all shades values
 
+/* INIT */
+document.addEventListener('DOMContentLoaded', function(){ // when the page is loaded
+	set_skin_id(21281); // set default skin here
+	document.getElementById("error_message_id_input").hidden = true;
+	update_inputs();
+}, true);
+
 /* INPUT FUNCTIONS */
 function generate_canvas() { // generate all canvas files and the skin.ini
-	main_color = material[get_color_data(main_color_id)[0]][get_color_data(main_color_id)[1]]; // get main color
+	main_color = get_color_hex(main_color_id); // get main color
 	
 	document.getElementById("generated_elements").removeChild(document.getElementById("generated_elements_1x"));
 	document.getElementById("generated_elements").removeChild(document.getElementById("generated_elements_2x"));
@@ -288,7 +302,53 @@ function generate_canvas() { // generate all canvas files and the skin.ini
 	
 	/* generate 1x & 2x elements */
 	for(var i=0 ; i<elements_2x.length ; i++) {
-		generate_element(elements_2x[i][1], i);
+		/* create 2x times versions */
+		// create the canvas
+		new_element = document.createElement("canvas");
+		new_element.id = elements_2x[i][1]+"_2x"; // give him an id
+		document.getElementById("generated_elements_2x").appendChild(new_element);
+		// get the canvas
+		canvas_name = elements_2x[i][1]+"_2x";
+		canvas = document.getElementById(canvas_name);
+		ctx = canvas.getContext("2d");
+		// resize the canvas
+		canvas.width = elements_2x[i][2];
+		canvas.height = elements_2x[i][3];
+		// clear the canvas
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
+		// draw
+		switch(elements_2x[i][0]) { // give arguments if needed
+			case "default-0": draw_element(canvas_name, elements_2x[i][0], [102]); break;
+			case "default-1": draw_element(canvas_name, elements_2x[i][0], [102]); break;
+			case "default-2": draw_element(canvas_name, elements_2x[i][0], [102]); break;
+			case "default-3": draw_element(canvas_name, elements_2x[i][0], [102]); break;
+			case "default-4": draw_element(canvas_name, elements_2x[i][0], [102]); break;
+			case "default-5": draw_element(canvas_name, elements_2x[i][0], [102]); break;
+			case "default-6": draw_element(canvas_name, elements_2x[i][0], [102]); break;
+			case "default-7": draw_element(canvas_name, elements_2x[i][0], [102]); break;
+			case "default-8": draw_element(canvas_name, elements_2x[i][0], [102]); break;
+			case "default-9": draw_element(canvas_name, elements_2x[i][0], [102]); break;
+			case "hitcircle": draw_element(canvas_name, elements_2x[i][0], [circle_type,false]); break;
+			case "hitcircleoverlay": draw_element(canvas_name, elements_2x[i][0], [circle_type]); break;
+			default: draw_element(canvas_name, elements_2x[i][0]); break;
+		}
+		
+		/* generate 1x version */
+		// create the canvas
+		new_element = document.createElement("canvas");
+		canvas_name = elements_2x[i][1];
+		new_element.id = canvas_name; // give him a id
+		document.getElementById("generated_elements_1x").appendChild(new_element);
+		// get the canvas
+		canvas = document.getElementById(canvas_name);
+		ctx = canvas.getContext("2d");
+		// resize the canvas
+		canvas.width = document.getElementById(canvas_name+"_2x").width/2;
+		canvas.height = document.getElementById(canvas_name+"_2x").height/2;
+		// clear the canvas
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
+		// copy
+		ctx.drawImage(document.getElementById(canvas_name+"_2x"), 0, 0, canvas.width, canvas.height);
 	}
 	
 	generate_skin_ini();
@@ -296,8 +356,62 @@ function generate_canvas() { // generate all canvas files and the skin.ini
 
 function set_parameter(setting, value) {
 	switch(setting) {
+		case "skin_id":
+			old_skin_id = get_skin_id();
+			var new_id_input = document.getElementById("id_input").value.replace("#",""); // remove "#"
+			var invalid = false;
+			try {
+				if(parseInt(new_id_input) < 1 || parseInt(new_id_input) > max_id || isNaN(parseInt(new_id_input)) || parseInt(new_id_input) == null) {
+					invalid = true;
+				} else {
+					new_id_input = parseInt(new_id_input);
+				}
+			}
+			catch { // can't convert to number
+				invalid = true;
+			}
+			if(invalid == true) {
+				if(new_id_input!="") { // not empty input
+					document.getElementById("id_input").style.borderBottom = "3px solid #FF4436";
+					document.getElementById("error_message_id_input").hidden = false;
+					if(isNaN(parseInt(new_id_input))) { // not a number
+						document.getElementById("error_message_id_input").innerHTML = "'"+new_id_input+"'"+" isn't a number.";
+					} else {
+						document.getElementById("error_message_id_input").innerHTML = "'"+new_id_input+"'"+" isn't a valid number.";
+					}
+				}
+				new_id_input = old_skin_id;
+			} else {
+				document.getElementById("id_input").value = new_id_input;
+				document.getElementById("id_input").style.borderBottom = "3px solid #EEEEEE";
+				document.getElementById("error_message_id_input").hidden = true;
+				set_skin_id(new_id_input);
+			}
+			break;
 		case "main_color_id":
-			main_color_id = parseInt(document.getElementById("main_color_id_input").value);
+			// main_color_id = parseInt(document.getElementById("main_color_id_input").value);
+			if(value == 0) { // set color
+				if(parseInt(document.getElementById("color_picker_0").value)<16 || get_color_data(main_color_id)[1]<=9) {
+					main_color_id = get_color_id(parseInt(document.getElementById("color_picker_0").value), get_color_data(main_color_id)[1]);
+				} else { // set the shade if it's aXXX and the color doesn't support these
+					switch(get_color_data(main_color_id)[1]) {
+						case 10: // a100 -> 100
+							main_color_id = get_color_id(parseInt(document.getElementById("color_picker_0").value), 1);
+							break;
+						case 11: // a200 -> 200
+							main_color_id = get_color_id(parseInt(document.getElementById("color_picker_0").value), 2);
+							break;
+						case 12: // a400 -> 400
+							main_color_id = get_color_id(parseInt(document.getElementById("color_picker_0").value), 4);
+							break;
+						case 13: // a700 -> 700
+							main_color_id = get_color_id(parseInt(document.getElementById("color_picker_0").value), 7);
+							break;
+					}
+				}
+			} else {
+				main_color_id = get_color_id(get_color_data(main_color_id)[0], value-1);
+			}
 			break;
 		case "circle_type":
 			circle_type = value;
@@ -318,11 +432,85 @@ function set_parameter(setting, value) {
 			hitsounds_type = value;
 			break;
 	}
-	console.log("Skin ID = " + get_skin_id().toString());
+	update_inputs();
+	// console.log("Skin ID = " + get_skin_id().toString());
 }
 
+function update_inputs() {
+	// skin id input
+	const zeros = ["","0","00","000","0000","00000","000000","0000000","00000000","000000000"]; // a list where index = amount of zeros
+	document.getElementById("id_input").value = zeros[max_id.toString().length-get_skin_id().toString().length]+get_skin_id(); // add 0 at the beginning
+	
+	// color picker selector
+	document.getElementById("color_picker_0").value = get_color_data(main_color_id)[0];
+	
+	// color picker buttons
+	for(var i=1 ; i<=14 ; i++) {
+		if(get_color_data(main_color_id)[0] >= 16 && i>10) {
+			document.getElementById("color_picker_"+i.toString()).hidden = true;
+		} else {
+			document.getElementById("color_picker_"+i.toString()).hidden = false;
+			document.getElementById("color_picker_"+i.toString()).value = get_color_id(get_color_data(main_color_id)[0],i-1)+1;
+			document.getElementById("color_picker_"+i.toString()).style.backgroundColor = material[get_color_data(main_color_id)[0]][i-1];
+			if(get_color_id(get_color_data(main_color_id)[0],i-1) == main_color_id) {
+				document.getElementById("color_picker_"+i.toString()).style.border = "4px ridge #FFFFFF";
+			} else {
+				document.getElementById("color_picker_"+i.toString()).style.border = "1px solid #000000";
+			}
+		}
+	}
+	
+	// radio buttons [name wihout '_n' , nombre de'inputs' , variable]
+	const radiobuttons = [
+		["circle_type",4,circle_type],
+		["spinner_type",2,spinner_type],
+		["cursor_color",2,cursor_color],
+		["cursor_trail",2,cursor_trail],
+		["scorebar_type",2,scorebar_type],
+		["hitsounds_type",2,hitsounds_type]
+	];
+	for(var i=0 ; i<radiobuttons.length ; i++) { // for each radiobuttons
+		for(var j=0 ; j<radiobuttons[i][1] ; j++) {
+			document.getElementById(radiobuttons[i][0]+"_"+(j+1).toString()).checked = (j==radiobuttons[i][2]);
+		}
+	}
+	
+	// canvas preview
+	draw_preview();
+	
+	// change the CSS var --main_color
+	if(get_color_id(get_color_data(main_color_id)[0], get_color_data(main_color_id)[1]) == 243) { // #212121
+		document.documentElement.style.setProperty("--main_color", "#000000");
+	} else {
+		document.documentElement.style.setProperty("--main_color", material[get_color_data(main_color_id)[0]][get_color_data(main_color_id)[1]]);
+	}
+	
+}
 
-
+function play_sound(sound) {
+	var audio;
+	switch(sound) {
+		case 0: // normal hit
+			audio = new Audio('audio/'+(hitsounds_type+1).toString()+'/normal-hitnormal.wav');
+			break;
+		case 1: // normal finish
+			audio = new Audio('audio/'+(hitsounds_type+1).toString()+'/normal-hitfinish.wav');
+			break;
+		case 2: // soft hit
+			audio = new Audio('audio/'+(hitsounds_type+1).toString()+'/soft-hitnormal.wav');
+			break;
+		case 3: // soft finish
+			audio = new Audio('audio/'+(hitsounds_type+1).toString()+'/soft-hitfinish.wav');
+			break;
+		case 4: // drum hit
+			audio = new Audio('audio/'+(hitsounds_type+1).toString()+'/drum-hitnormal.wav');
+			break;
+		case 5: // drum finish
+			audio = new Audio('audio/'+(hitsounds_type+1).toString()+'/drum-hitfinish.wav');
+			break;
+	}
+	audio.play();
+}
 
 /* COLORS functions & tools */
 function add_color(c1, c2) { /* return the color when c1 is over c2 (c1 and c2 are #rrggbbaa) */
@@ -440,6 +628,22 @@ function get_color_data(id) { // returns [color_id, shade_id] with the color id
 	}
 }
 
+function get_color_hex(id) { // return the hex value #rrggbb of the color id
+	return material[get_color_data(id)[0]][get_color_data(id)[1]];
+}
+
+function get_complementary_color_hex(id) {
+	switch(get_color_data(id)[0]) {
+		case 16: // brown
+			return material[6][get_color_data(id)[1]];
+		case 17: // gray
+			return material[12][get_color_data(id)[1]];
+		case 18: // blue gray
+			return draw_cursor_color = material[1][get_color_data(id)[1]];
+		default: // 0-15
+			return draw_cursor_color = material[(get_color_data(id)[0]+6)%16][get_color_data(id)[1]];
+	}
+}
 
 /* skin ID tools */
 function get_skin_id() { // return the skin id according to global variables
@@ -454,223 +658,81 @@ function get_skin_id() { // return the skin id according to global variables
 		6: the type of HP bar (0-1) (1 bit) [1]
 		7: type of hitsounds in gameplay (0-1) (1 bit) [0]
 	*/
-	
-	return main_color_id*(2**7)+circle_type*(2**5)+spinner_type*(2**4)+cursor_color*(2**3)+cursor_trail*(2**2)+scorebar_type*(2**1)+hitsounds_type*(1)+1;
+	return main_color_id*(2**7)+circle_type*(2**5)+spinner_type*(2**4)+cursor_color*(2**3)+cursor_trail*(2**2)+scorebar_type*(2**1)+hitsounds_type*(2**0)+1;
+}
+
+function set_skin_id(id) { // change the settings according to id
+	main_color_id = Math.trunc((id-1)/(2**7)%256);
+	circle_type = Math.trunc((id-1)/(2**5)%4);
+	spinner_type = Math.trunc((id-1)/(2**4)%2);
+	cursor_color = Math.trunc((id-1)/(2**3)%2);
+	cursor_trail = Math.trunc((id-1)/(2**2)%2);
+	scorebar_type = Math.trunc((id-1)/(2**1)%2);
+	hitsounds_type = Math.trunc((id-1)/(2**0)%2);
+	// console.log(main_color_id, circle_type, spinner_type, cursor_color, cursor_trail, scorebar_type, hitsounds_type)
+	update_inputs();
 }
 
 /* DRAWING functions */
 
-function generate_element(canvas_name, element_id) {
-	// element id = index of the element 
+/* useful tools */
+function draw_centered_circle(canvas_name, border_size, cs, gradient_style, gradient_direction, color1, color2, shadow_style, shadow_blur, shadow_color) { /* the function to draw a centered circle */
+	// from this: https://github.com/Corne2Plum3/osu-hitcircle-generator.github.io/blob/main/js/app.js
 	
-	/* useful tools */
-	
-	function draw_centered_circle(canvas_name, border_size, cs, gradient_style, gradient_direction, color1, color2, shadow_style, shadow_blur, shadow_color) { /* the function to draw a centered circle */
-		// from this: https://github.com/Corne2Plum3/osu-hitcircle-generator.github.io/blob/main/js/app.js
-		
-		/* Arguments:
-		 1. canvas_name (str): name of the canvas
-		 2. border_size (int): 0=filled circle ; n=size in px of the stroke
-		 3. cs (float): radius of the circle in px (border included)
-		 4. gradient_style (str): "none", "linear", "radial"
-		 5. gradient_direction (float): direction of the linear gradient
-		 6. color1 (color): "rgba(r, g, b, a)" for exemple
-		 7. color2 (color): "rgba(r, g, b, a)" for exemple
-		 8. shadow_style (str): "none", "out", "in/out"
-		 9. shadow_blur (int): shadow blur
-		10. shadow_color (color): "rgba(r, g, b, a)" for exemple
-		*/
-				
-		var canvas = document.getElementById(canvas_name);
-		var ctx = canvas.getContext('2d');
-				
-		var gradient; // the gradient used to color the circle
-				
-		/* 1. define the gradient */
-		switch(gradient_style){
-			case "none":
-				gradient = color1;
-				break;
-			case "linear":
-				var x1 = Math.round((canvas.width/2) + (cs * Math.cos(Math.PI*gradient_direction/180-(Math.PI/2))));
-				var y1 = Math.round((canvas.height/2) + (cs * Math.sin(Math.PI*gradient_direction/180-(Math.PI/2))));
-				var x2 = canvas.width - x1;
-				var y2 = canvas.height - y1;
-				gradient = ctx.createLinearGradient(x1, y1, x2, y2);
-				gradient.addColorStop(0, color1);
-				gradient.addColorStop(1, color2);
-				break;
-			case "radial":
-				// color1 = center ; color2 = out
-				gradient = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 1, (canvas.width)/2, (canvas.height)/2, cs);
-				gradient.addColorStop(0, color1);
-				if(border_size != 0) { /* don't add this color stop for filled circles */
-					gradient.addColorStop(1-(border_size/cs), color1);
-				}
-				gradient.addColorStop(1, color2);
-				break;
-		}
-				
-			/* 2. define strokeStyle, fillStyle and lineWidth */
-			if(border_size == 0){ // fill mode
-				ctx.lineWidth = 0;
-				ctx.fillStyle = gradient;
-				ctx.strokeStyle = "rgba(0,0,0,0)";
-			} else { // border mode
-				ctx.lineWidth = border_size;
-				ctx.fillStyle = "rgba(0,0,0,0)";
-				ctx.strokeStyle = gradient;
-			}
-				
-			/* 3. define the shadow */
-			ctx.shadowOffsetX = 0;
-			ctx.shadowOffsetY = 0;
-			switch(shadow_style){
-				case "none":
-					ctx.shadowBlur = 0;
-					ctx.shadowColor = "rgba(0,0,0,0)";
-					break;
-				case "out":
-					ctx.shadowBlur = shadow_blur;
-					ctx.shadowColor = shadow_color;
-					break;
-				case "in/out":
-					ctx.shadowBlur = shadow_blur;
-					ctx.shadowColor = shadow_color;
-					break;
-			}
-				
-			/* 4. draw */
-			// specific case of shadow_style = "out"
-			if(shadow_style == "out"){
-				// set the line width and the stroke style for this hidden circle
-				ctx.lineWidth = 2;
-				ctx.strokeStyle = shadow_color;
-				// draw a thin ring in the size of the circle (doesn't work very well if the circle is filled AND his alpha < 100%)
-				ctx.beginPath();
-				ctx.arc(canvas.width/2, canvas.height/2, cs-2, 0, 2*Math.PI);
-				ctx.stroke();
-				ctx.arc(canvas.width/2, canvas.height/2, cs-2, 0, 2*Math.PI); // drawn 2 times to make the shadow similar to the "in/out" style
-				ctx.stroke();
-				ctx.closePath();
-				// reset the line width & stroke style
-				ctx.lineWidth = border_size;
-				ctx.strokeStyle = gradient;
-				// remove the shadow for the last circle (the final)
-				ctx.shadowBlur = 0;
-				ctx.shadowColor = "rgba(0,0,0,0)";
-			}
-			// real circle
-			ctx.beginPath();
-			if(border_size == 0){ // filled
-				ctx.arc(canvas.width/2, canvas.height/2, cs-(border_size/2), 0, 2*Math.PI);
-				ctx.fill();
-			} else {
-				ctx.arc(canvas.width/2, canvas.height/2, cs-(border_size/2), 0, 2*Math.PI);
-				ctx.stroke();
-			}
-			ctx.closePath();
-	}
-	
-	function draw_mode_icon(canvas_name, mode, icon_x_center, icon_y_center, icon_size, color) { // draw the game mode icon
-		var canvas = document.getElementById(canvas_name);
-		var ctx = canvas.getContext("2d");
-		
-		ctx.strokeStyle = color;
-		ctx.fillStyle = color;
-		var icon_border_size = 0.2*icon_size;
-		
-		// ext border
-		ctx.lineWidth = icon_border_size;
-		ctx.lineCap = "round"
-		ctx.beginPath();
-		ctx.arc(icon_x_center, icon_y_center, icon_size-(icon_border_size/2), 0, 2*Math.PI);
-		ctx.stroke();
-		ctx.closePath();
-		
-		switch(mode) {
-			case "osu":
-				ctx.beginPath();
-				ctx.arc(icon_x_center, icon_y_center, icon_size-2*icon_border_size, 0, 2*Math.PI);
-				ctx.fill();
-				ctx.closePath();
-				break;
-			case "fruits":
-				ctx.beginPath();
-				ctx.arc(icon_x_center-(icon_border_size*0.8), icon_y_center+(icon_size*(-0.3)), icon_border_size*0.8, 0, 2*Math.PI);
-				ctx.fill();
-				ctx.closePath();
-				ctx.beginPath();
-				ctx.arc(icon_x_center+(icon_border_size*0.8), icon_y_center, icon_border_size*0.8, 0, 2*Math.PI);
-				ctx.fill();
-				ctx.closePath();
-				ctx.beginPath();
-				ctx.arc(icon_x_center-(icon_border_size*0.8), icon_y_center+(icon_size*(+0.3)), icon_border_size*0.8, 0, 2*Math.PI);
-				ctx.fill();
-				ctx.closePath();
-				break;
-			case "taiko":
-				ctx.lineWidth = icon_border_size*1.2;
-				ctx.beginPath();
-				ctx.arc(icon_x_center, icon_y_center, icon_size-2*icon_border_size-ctx.lineWidth/2, 0, 2*Math.PI);
-				ctx.stroke();
-				ctx.closePath();
-				ctx.beginPath();
-				ctx.moveTo(icon_x_center, icon_y_center-icon_size/2+icon_border_size/2);
-				ctx.lineTo(icon_x_center, icon_y_center+icon_size/2-icon_border_size/2);
-				ctx.stroke();
-				ctx.closePath();
-				break;
-			case "mania":
-				ctx.beginPath(); // middle
-				ctx.moveTo(icon_x_center, icon_y_center+(icon_size*(-0.48)));
-				ctx.lineTo(icon_x_center, icon_y_center+(icon_size*(+0.48)));
-				ctx.stroke();
-				ctx.closePath();
-				ctx.beginPath(); // left
-				ctx.moveTo(icon_x_center-icon_border_size*1.75, icon_y_center+(icon_size*(-0.24)));
-				ctx.lineTo(icon_x_center-icon_border_size*1.75, icon_y_center+(icon_size*(+0.24)));
-				ctx.stroke();
-				ctx.closePath();
-				ctx.beginPath(); // right
-				ctx.moveTo(icon_x_center+icon_border_size*1.75, icon_y_center+(icon_size*(-0.24)));
-				ctx.lineTo(icon_x_center+icon_border_size*1.75, icon_y_center+(icon_size*(+0.24)));
-				ctx.stroke();
-				ctx.closePath();
-				break;
-		}
-	}
-	
-	function draw_centered_text(canvas_name, text, font_settings, correction_y, color1, color2, shadow_style, shadow_blur, shadow_color) {
-		/* Arguments:
-		 1. canvas_name (str): name of the canvas
-		 2. text (str): the text to draw
-		 3. font_settings (str): literraly ctx.font(); (same than the CSS)
-		 4. correction_y (int): the correction y of the text
-		 5. color1 (color): "rgba(r, g, b, a)" for exemple (linear gradient 0° color1-color2)
-		 6. color2 (color): "rgba(r, g, b, a)" for exemple
-		 7. shadow_style (str): "none", "out", "in/out"
-		 8. shadow_blur (int): shadow blur
-		 9. shadow_color (color): "rgba(r, g, b, a)" for exemple
-		*/
-		
-		var canvas = document.getElementById(canvas_name);
-		var ctx = canvas.getContext("2d");
-		
-		/* 1. define the gradient */
-		var x1 = 0;
-		var y1 = 0;
-		var x2 = 0;
-		var y2 = canvas.height;
-		gradient = ctx.createLinearGradient(x1, y1, x2, y2);
-		gradient.addColorStop(0, color1);
-		gradient.addColorStop(1, color2);
-				
-		/* 2. define strokeStyle, fillStyle and lineWidth */
-		ctx.lineWidth = 0;
-		ctx.fillStyle = gradient;
-		ctx.strokeStyle = "rgba(0,0,0,0)";
+	/* Arguments:
+	 1. canvas_name (str): name of the canvas
+	 2. border_size (int): 0=filled circle ; n=size in px of the stroke
+	 3. cs (float): radius of the circle in px (border included)
+	 4. gradient_style (str): "none", "linear", "radial"
+	 5. gradient_direction (float): direction of the linear gradient
+	 6. color1 (color): "rgba(r, g, b, a)" for exemple
+	 7. color2 (color): "rgba(r, g, b, a)" for exemple
+	 8. shadow_style (str): "none", "out", "in/out"
+	 9. shadow_blur (int): shadow blur
+	10. shadow_color (color): "rgba(r, g, b, a)" for exemple
+	*/
 			
+	var canvas = document.getElementById(canvas_name);
+	var ctx = canvas.getContext("2d");
+	
+	var gradient; // the gradient used to color the circle
+			
+	/* 1. define the gradient */
+	switch(gradient_style){
+		case "none":
+			gradient = color1;
+			break;
+		case "linear":
+			var x1 = Math.round((canvas.width/2) + (cs * Math.cos(Math.PI*gradient_direction/180-(Math.PI/2))));
+			var y1 = Math.round((canvas.height/2) + (cs * Math.sin(Math.PI*gradient_direction/180-(Math.PI/2))));
+			var x2 = canvas.width - x1;
+			var y2 = canvas.height - y1;
+			gradient = ctx.createLinearGradient(x1, y1, x2, y2);
+			gradient.addColorStop(0, color1);
+			gradient.addColorStop(1, color2);
+			break;
+		case "radial":
+			// color1 = center ; color2 = out
+			gradient = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 1, (canvas.width)/2, (canvas.height)/2, cs);
+			gradient.addColorStop(0, color1);
+			if(border_size != 0) { /* don't add this color stop for filled circles */
+				gradient.addColorStop(1-(border_size/cs), color1);
+			}
+			gradient.addColorStop(1, color2);
+			break;
+	}
+			
+		/* 2. define strokeStyle, fillStyle and lineWidth */
+		if(border_size == 0){ // fill mode
+			ctx.lineWidth = 0;
+			ctx.fillStyle = gradient;
+			ctx.strokeStyle = "rgba(0,0,0,0)";
+		} else { // border mode
+			ctx.lineWidth = border_size;
+			ctx.fillStyle = "rgba(0,0,0,0)";
+			ctx.strokeStyle = gradient;
+		}
+				
 		/* 3. define the shadow */
 		ctx.shadowOffsetX = 0;
 		ctx.shadowOffsetY = 0;
@@ -688,148 +750,300 @@ function generate_element(canvas_name, element_id) {
 				ctx.shadowColor = shadow_color;
 				break;
 		}
+			
+		/* 4. draw */
+		// specific case of shadow_style = "out"
+		if(shadow_style == "out"){
+			// set the line width and the stroke style for this hidden circle
+			ctx.lineWidth = 2;
+			ctx.strokeStyle = shadow_color;
+			// draw a thin ring in the size of the circle (doesn't work very well if the circle is filled AND his alpha < 100%)
+			ctx.beginPath();
+			ctx.arc(canvas.width/2, canvas.height/2, cs-2, 0, 2*Math.PI);
+			ctx.stroke();
+			ctx.arc(canvas.width/2, canvas.height/2, cs-2, 0, 2*Math.PI); // drawn 2 times to make the shadow similar to the "in/out" style
+			ctx.stroke();
+			ctx.closePath();
+			// reset the line width & stroke style
+			ctx.lineWidth = border_size;
+			ctx.strokeStyle = gradient;
+			// remove the shadow for the last circle (the final)
+			ctx.shadowBlur = 0;
+			ctx.shadowColor = "rgba(0,0,0,0)";
+		}
+		// real circle
+		ctx.beginPath();
+		if(border_size == 0){ // filled
+			ctx.arc(canvas.width/2, canvas.height/2, cs-(border_size/2), 0, 2*Math.PI);
+			ctx.fill();
+		} else {
+			ctx.arc(canvas.width/2, canvas.height/2, cs-(border_size/2), 0, 2*Math.PI);
+			ctx.stroke();
+		}
+		ctx.closePath();
+}
+
+function draw_mode_icon(canvas_name, mode, icon_x_center, icon_y_center, icon_size, color) { // draw the game mode icon
+	var canvas = document.getElementById(canvas_name);
+	var ctx = canvas.getContext("2d");
+	
+	ctx.strokeStyle = color;
+	ctx.fillStyle = color;
+	var icon_border_size = 0.2*icon_size;
+	
+	// ext border
+	ctx.lineWidth = icon_border_size;
+	ctx.lineCap = "round"
+	ctx.beginPath();
+	ctx.arc(icon_x_center, icon_y_center, icon_size-(icon_border_size/2), 0, 2*Math.PI);
+	ctx.stroke();
+	ctx.closePath();
+	
+	switch(mode) {
+		case "osu":
+			ctx.beginPath();
+			ctx.arc(icon_x_center, icon_y_center, icon_size-2*icon_border_size, 0, 2*Math.PI);
+			ctx.fill();
+			ctx.closePath();
+			break;
+		case "fruits":
+			ctx.beginPath();
+			ctx.arc(icon_x_center-(icon_border_size*0.8), icon_y_center+(icon_size*(-0.3)), icon_border_size*0.8, 0, 2*Math.PI);
+			ctx.fill();
+			ctx.closePath();
+			ctx.beginPath();
+			ctx.arc(icon_x_center+(icon_border_size*0.8), icon_y_center, icon_border_size*0.8, 0, 2*Math.PI);
+			ctx.fill();
+			ctx.closePath();
+			ctx.beginPath();
+			ctx.arc(icon_x_center-(icon_border_size*0.8), icon_y_center+(icon_size*(+0.3)), icon_border_size*0.8, 0, 2*Math.PI);
+			ctx.fill();
+			ctx.closePath();
+			break;
+		case "taiko":
+			ctx.lineWidth = icon_border_size*1.2;
+			ctx.beginPath();
+			ctx.arc(icon_x_center, icon_y_center, icon_size-2*icon_border_size-ctx.lineWidth/2, 0, 2*Math.PI);
+			ctx.stroke();
+			ctx.closePath();
+			ctx.beginPath();
+			ctx.moveTo(icon_x_center, icon_y_center-icon_size/2+icon_border_size/2);
+			ctx.lineTo(icon_x_center, icon_y_center+icon_size/2-icon_border_size/2);
+			ctx.stroke();
+			ctx.closePath();
+			break;
+		case "mania":
+			ctx.beginPath(); // middle
+			ctx.moveTo(icon_x_center, icon_y_center+(icon_size*(-0.48)));
+			ctx.lineTo(icon_x_center, icon_y_center+(icon_size*(+0.48)));
+			ctx.stroke();
+			ctx.closePath();
+			ctx.beginPath(); // left
+			ctx.moveTo(icon_x_center-icon_border_size*1.75, icon_y_center+(icon_size*(-0.24)));
+			ctx.lineTo(icon_x_center-icon_border_size*1.75, icon_y_center+(icon_size*(+0.24)));
+			ctx.stroke();
+			ctx.closePath();
+			ctx.beginPath(); // right
+			ctx.moveTo(icon_x_center+icon_border_size*1.75, icon_y_center+(icon_size*(-0.24)));
+			ctx.lineTo(icon_x_center+icon_border_size*1.75, icon_y_center+(icon_size*(+0.24)));
+			ctx.stroke();
+			ctx.closePath();
+			break;
+	}
+}
+
+function draw_centered_text(canvas_name, text, font_settings, correction_y, color1, color2, shadow_style, shadow_blur, shadow_color) {
+	/* Arguments:
+	 1. canvas_name (str): name of the canvas
+	 2. text (str): the text to draw
+	 3. font_settings (str): literraly ctx.font(); (same than the CSS)
+	 4. correction_y (int): the correction y of the text
+	 5. color1 (color): "rgba(r, g, b, a)" for exemple (linear gradient 0° color1-color2)
+	 6. color2 (color): "rgba(r, g, b, a)" for exemple
+	 7. shadow_style (str): "none", "out", "in/out"
+	 8. shadow_blur (int): shadow blur
+	 9. shadow_color (color): "rgba(r, g, b, a)" for exemple
+	*/
+	
+	var canvas = document.getElementById(canvas_name);
+	var ctx = canvas.getContext("2d");
+	
+	/* 1. define the gradient */
+	var x1 = 0;
+	var y1 = 0;
+	var x2 = 0;
+	var y2 = canvas.height;
+	gradient = ctx.createLinearGradient(x1, y1, x2, y2);
+	gradient.addColorStop(0, color1);
+	gradient.addColorStop(1, color2);
+			
+	/* 2. define strokeStyle, fillStyle and lineWidth */
+	ctx.lineWidth = 0;
+	ctx.fillStyle = gradient;
+	ctx.strokeStyle = "rgba(0,0,0,0)";
 		
-		// init ctx
-		ctx.font = font_settings;
-		ctx.textAlign = "center";
-		ctx.textBaseline = "middle";
-		
-		// draw
-		ctx.fillText(text, (canvas.width/2)+0, (canvas.height/2)+correction_y);
+	/* 3. define the shadow */
+	ctx.shadowOffsetX = 0;
+	ctx.shadowOffsetY = 0;
+	switch(shadow_style){
+		case "none":
+			ctx.shadowBlur = 0;
+			ctx.shadowColor = "rgba(0,0,0,0)";
+			break;
+		case "out":
+			ctx.shadowBlur = shadow_blur;
+			ctx.shadowColor = shadow_color;
+			break;
+		case "in/out":
+			ctx.shadowBlur = shadow_blur;
+			ctx.shadowColor = shadow_color;
+			break;
 	}
 	
-	function draw_rounded_rect(canvas_name, x, y, w, h, radius, border_size, gradient_style, gradient_direction, color1, color2, shadow_style, shadow_blur, shadow_color) { /* draw a rounded rectangle */
-		/* Arguments:
-		  1. canvas_name (str): name of the canavs
-	      2. x (int): X position of the top left corner
-	      3. y (int): Y position of the top left corner.
-		  4. w (int): width of the rect
-		  5. h (int): height of the rect
-		  6. radius (int): border radius
-		  7. border_size (int): 0=filled circle ; n=size in px of the stroke
-		  8. gradient_style (str): "none", "linear", "radial"
-		  9. gradient_direction (int): direction of the linear gradient (0, 90, 180, 270 only !)
-		 10. color1 (color): "rgba(r, g, b, a)" for exemple
-		 11. color2 (color): "rgba(r, g, b, a)" for exemple
-		 12. shadow_style (str): "none", "out", "in/out"
-		 13. shadow_blur (int): shadow blur
-		 14. shadow_color (color): "rgba(r, g, b, a)" for exemple
-		*/
-		
-		/* 1. get canvas */		
-	    var canvas = document.getElementById(canvas_name);
-	    var ctx = canvas.getContext("2d");
+	// init ctx
+	ctx.font = font_settings;
+	ctx.textAlign = "center";
+	ctx.textBaseline = "middle";
+	
+	// draw
+	ctx.fillText(text, (canvas.width/2)+0, (canvas.height/2)+correction_y);
+}
 
-		/* 2. define the gradient */
-		switch(gradient_style){
-			case "none":
-				gradient = color1;
-				break;
-			case "linear":
-				var x1, y1, x2, y2;
-				switch(gradient_direction) {
-					case 90:
-						x1 = x;
-						y1 = 0;
-						x2 = x+w;
-						y2 = 0;
-						break;
-					case 180:
-						x1 = 0;
-						y1 = y+h;
-						x2 = 0
-						y2 = y;
-						break;
-					case 270:
-						x1 = x+w;
-						y1 = 0;
-						x2 = x;
-						y2 = 0;
-						break
-					default: // 0 or something else
-						x1 = 0;
-						y1 = y;
-						x2 = 0
-						y2 = y+h;
-						break;
-				}
-				gradient = ctx.createLinearGradient(x1, y1, x2, y2);
-				gradient.addColorStop(0, color1);
-				gradient.addColorStop(1, color2);
-				break;
-			case "radial":
-				// color1 = center ; color2 = out
-				if(canvas.width >= canvas.height) {
-					gradient = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 1, (canvas.width)/2, (canvas.height)/2, canvas.height/2);
-				} else {
-					gradient = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 1, (canvas.width)/2, (canvas.height)/2, canvas.width/2);
-				}
-				gradient.addColorStop(0, color1);
-				if(border_size != 0) { /* don't add this color stop for filled circles */
-					gradient.addColorStop(1-(border_size/cs), color1);
-				}
-				gradient.addColorStop(1, color2);
-				break;
-		}
-		
-		/* 3. define strokeStyle, fillStyle and lineWidth */
-		if(border_size != 0) { // border mode
-			ctx.lineWidth = border_size;
-			ctx.fillStyle = "rgba(0,0,0,0)";
-			ctx.strokeStyle = gradient;
-		} else { // fill mode
-			ctx.lineWidth = 0;
-			ctx.fillStyle = gradient;
-			ctx.strokeStyle = "rgba(0,0,0,0)";
-		}
-		
-		/* 4. define the shadow */
-		ctx.shadowOffsetX = 0;
-		ctx.shadowOffsetY = 0;
-		switch(shadow_style){
-			case "none":
-				ctx.shadowBlur = 0;
-				ctx.shadowColor = "rgba(0,0,0,0)";
-				break;
-			case "out":
-				ctx.shadowBlur = shadow_blur;
-				ctx.shadowColor = shadow_color;
-				break;
-			case "in/out":
-				ctx.shadowBlur = shadow_blur;
-				ctx.shadowColor = shadow_color;
-				break;
-		}
-		
-		/* 5. draw */
-		x = x + (border_size/2);
-		y = y + (border_size/2);
-		w = w - (border_size/2);
-		h = h - (border_size/2);
-		var r = x + w;
-	    var b = y + h;
-
-		ctx.beginPath();
-		ctx.moveTo(x+radius, y);
-		ctx.lineTo(r-radius, y);
-		ctx.quadraticCurveTo(r, y, r, y+radius);
-		ctx.lineTo(r, y+h-radius);
-		ctx.quadraticCurveTo(r, b, r-radius, b);
-		ctx.lineTo(x+radius, b);
-		ctx.quadraticCurveTo(x, b, x, b-radius);
-	 	ctx.lineTo(x, y+radius);
-		ctx.quadraticCurveTo(x, y, x+radius, y);
-		
-	    if(border_size != 0) { // border mode
-			ctx.stroke();
-		} else {
-			ctx.fill();
-		}
+function draw_rounded_rect(canvas_name, x, y, w, h, radius, border_size, gradient_style, gradient_direction, color1, color2, shadow_style, shadow_blur, shadow_color) { /* draw a rounded rectangle */
+	/* Arguments:
+	  1. canvas_name (str): name of the canavs
+      2. x (int): X position of the top left corner
+      3. y (int): Y position of the top left corner.
+	  4. w (int): width of the rect
+	  5. h (int): height of the rect
+	  6. radius (int): border radius
+	  7. border_size (int): 0=filled circle ; n=size in px of the stroke
+	  8. gradient_style (str): "none", "linear", "radial"
+	  9. gradient_direction (int): direction of the linear gradient (0, 90, 180, 270 only !)
+	 10. color1 (color): "rgba(r, g, b, a)" for exemple
+	 11. color2 (color): "rgba(r, g, b, a)" for exemple
+	 12. shadow_style (str): "none", "out", "in/out"
+	 13. shadow_blur (int): shadow blur
+	 14. shadow_color (color): "rgba(r, g, b, a)" for exemple
+	*/
+	
+	/* 1. get canvas */		
+    var canvas = document.getElementById(canvas_name);
+    var ctx = canvas.getContext("2d");
+	/* 2. define the gradient */
+	switch(gradient_style){
+		case "none":
+			gradient = color1;
+			break;
+		case "linear":
+			var x1, y1, x2, y2;
+			switch(gradient_direction) {
+				case 90:
+					x1 = x;
+					y1 = 0;
+					x2 = x+w;
+					y2 = 0;
+					break;
+				case 180:
+					x1 = 0;
+					y1 = y+h;
+					x2 = 0
+					y2 = y;
+					break;
+				case 270:
+					x1 = x+w;
+					y1 = 0;
+					x2 = x;
+					y2 = 0;
+					break
+				default: // 0 or something else
+					x1 = 0;
+					y1 = y;
+					x2 = 0
+					y2 = y+h;
+					break;
+			}
+			gradient = ctx.createLinearGradient(x1, y1, x2, y2);
+			gradient.addColorStop(0, color1);
+			gradient.addColorStop(1, color2);
+			break;
+		case "radial":
+			// color1 = center ; color2 = out
+			if(canvas.width >= canvas.height) {
+				gradient = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 1, (canvas.width)/2, (canvas.height)/2, canvas.height/2);
+			} else {
+				gradient = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 1, (canvas.width)/2, (canvas.height)/2, canvas.width/2);
+			}
+			gradient.addColorStop(0, color1);
+			if(border_size != 0) { /* don't add this color stop for filled circles */
+				gradient.addColorStop(1-(border_size/cs), color1);
+			}
+			gradient.addColorStop(1, color2);
+			break;
 	}
+	
+	/* 3. define strokeStyle, fillStyle and lineWidth */
+	if(border_size != 0) { // border mode
+		ctx.lineWidth = border_size;
+		ctx.fillStyle = "rgba(0,0,0,0)";
+		ctx.strokeStyle = gradient;
+	} else { // fill mode
+		ctx.lineWidth = 0;
+		ctx.fillStyle = gradient;
+		ctx.strokeStyle = "rgba(0,0,0,0)";
+	}
+	
+	/* 4. define the shadow */
+	ctx.shadowOffsetX = 0;
+	ctx.shadowOffsetY = 0;
+	switch(shadow_style){
+		case "none":
+			ctx.shadowBlur = 0;
+			ctx.shadowColor = "rgba(0,0,0,0)";
+			break;
+		case "out":
+			ctx.shadowBlur = shadow_blur;
+			ctx.shadowColor = shadow_color;
+			break;
+		case "in/out":
+			ctx.shadowBlur = shadow_blur;
+			ctx.shadowColor = shadow_color;
+			break;
+	}
+	
+	/* 5. draw */
+	x = x + (border_size/2);
+	y = y + (border_size/2);
+	w = w - (border_size/2);
+	h = h - (border_size/2);
+	var r = x + w;
+    var b = y + h;
+	ctx.beginPath();
+	ctx.moveTo(x+radius, y);
+	ctx.lineTo(r-radius, y);
+	ctx.quadraticCurveTo(r, y, r, y+radius);
+	ctx.lineTo(r, y+h-radius);
+	ctx.quadraticCurveTo(r, b, r-radius, b);
+	ctx.lineTo(x+radius, b);
+	ctx.quadraticCurveTo(x, b, x, b-radius);
+ 	ctx.lineTo(x, y+radius);
+	ctx.quadraticCurveTo(x, y, x+radius, y);
+	
+    if(border_size != 0) { // border mode
+		ctx.stroke();
+	} else {
+		ctx.fill();
+	}
+}
+
+/* real */
+function draw_element(canvas_name, element_name, options = []) {
+	// element id = index of the element 
+	// option = optional parameters for functions
 	
 	/* elements */
 	
-	function generate_approachcircle() {
+	function draw_approachcircle() {
 		draw_centered_circle(
 			canvas_name, /* canvas */
 			1, /* border size */
@@ -856,7 +1070,7 @@ function generate_element(canvas_name, element_id) {
 		);
 	}
 	
-	function generate_arrow_warning() {
+	function draw_arrow_warning() {
 		var canvas = document.getElementById(canvas_name);
 		var ctx = canvas.getContext("2d");
 		
@@ -877,7 +1091,7 @@ function generate_element(canvas_name, element_id) {
 		ctx.closePath();
 	}
 	
-	function generate_button(part) {
+	function draw_button(part) {
 		// part: left, middle, right
 		var x;
 		switch(part) {
@@ -928,7 +1142,7 @@ function generate_element(canvas_name, element_id) {
 		);
 	}
 	
-	function generate_combo_n(n) { /* generate a number n */
+	function draw_combo_n(n) { /* generate a number n */
 		var canvas = document.getElementById(canvas_name);
 		var ctx = canvas.getContext("2d");
 		var font = "84px "+font_normal;
@@ -971,7 +1185,7 @@ function generate_element(canvas_name, element_id) {
 		}
  	}
 	
-	function generate_count(value) {
+	function draw_count(value) {
 		// get font settings
 		var font_settings, correction_y, text;
 		switch(value) {
@@ -1006,29 +1220,23 @@ function generate_element(canvas_name, element_id) {
 		
 	}
 	
-	function generate_cursor() {
+	function draw_cursor() {
 		const cursor_size = 66; // in px
 		const border_size = 48;
 		
 		// get color
 		var draw_cursor_color;
 		if(cursor_color == 0) {
-			draw_cursor_color = material[get_color_data(main_color_id)[0]][get_color_data(main_color_id)[1]];
-		} else {
-			if(get_color_data(main_color_id)[0]<16) {
-				draw_cursor_color = material[(get_color_data(main_color_id)[0]+6)%16][get_color_data(main_color_id)[1]];
+			if(get_color_data(main_color_id)[1]>=7 && get_color_data(main_color_id)[1]<=9) { // lighter cursor for 700 800 900 shades
+				draw_cursor_color = get_color_hex(get_color_id(get_color_data(main_color_id)[0],6)); // set to 600 shade
 			} else {
-				switch(get_color_data(main_color_id)[0]) {
-					case 16: // brown
-						draw_cursor_color = material[6][get_color_data(main_color_id)[1]];
-						break;
-					case 17: // gray
-						draw_cursor_color = material[12][get_color_data(main_color_id)[1]];
-						break;
-					case 18: // blue gray
-						draw_cursor_color = material[1][get_color_data(main_color_id)[1]];
-						break;
-				}
+				draw_cursor_color = get_color_hex(main_color_id);
+			}
+		} else {
+			if(get_color_data(main_color_id)[1]>=7 && get_color_data(main_color_id)[1]<=9) { // lighter cursor for 700 800 900 shades
+				draw_cursor_color = get_complementary_color_hex(get_color_id(get_color_data(main_color_id)[0],6)); // set to 600 shade
+			} else {
+				draw_cursor_color = get_complementary_color_hex(main_color_id);
 			}
 		}
 		
@@ -1061,28 +1269,22 @@ function generate_element(canvas_name, element_id) {
 		);
 	}
 	
-	function generate_cursortrail() {
+	function draw_cursortrail() {
 		const cursortrail_size = 58;
 		
 		// get color
 		var draw_cursor_color;
 		if(cursor_color == 0) {
-			draw_cursor_color = material[get_color_data(main_color_id)[0]][get_color_data(main_color_id)[1]];
-		} else {
-			if(get_color_data(main_color_id)[0]<16) {
-				draw_cursor_color = material[(get_color_data(main_color_id)[0]+6)%16][get_color_data(main_color_id)[1]];
+			if(get_color_data(main_color_id)[1]>=7 && get_color_data(main_color_id)[1]<=9) { // lighter cursor for 700 800 900 shades
+				draw_cursor_color = get_color_hex(get_color_id(get_color_data(main_color_id)[0],6)); // set to 600 shade
 			} else {
-				switch(get_color_data(main_color_id)[0]) {
-					case 16: // brown
-						draw_cursor_color = material[6][get_color_data(main_color_id)[1]];
-						break;
-					case 17: // gray
-						draw_cursor_color = material[12][get_color_data(main_color_id)[1]];
-						break;
-					case 18: // blue gray
-						draw_cursor_color = material[1][get_color_data(main_color_id)[1]];
-						break;
-				}
+				draw_cursor_color = get_color_hex(main_color_id);
+			}
+		} else {
+			if(get_color_data(main_color_id)[1]>=7 && get_color_data(main_color_id)[1]<=9) { // lighter cursor for 700 800 900 shades
+				draw_cursor_color = get_complementary_color_hex(get_color_id(get_color_data(main_color_id)[0],6)); // set to 600 shade
+			} else {
+				draw_cursor_color = get_complementary_color_hex(main_color_id);
 			}
 		}
 		
@@ -1117,8 +1319,8 @@ function generate_element(canvas_name, element_id) {
 		}
 	}
 	
-	function generate_fail_background() {
-		// almost a copypasta from generate_pause_overlay()
+	function draw_fail_background() {
+		// almost a copypasta from draw_pause_overlay()
 		var canvas = document.getElementById(canvas_name);
 		var ctx = canvas.getContext("2d");
 		var gradient;
@@ -1146,18 +1348,15 @@ function generate_element(canvas_name, element_id) {
 		ctx.fillText("FAILED", (canvas.width/2)+0, 180);
 	}
 	
-	function generate_default_n(n) { /* generate a number n */
+	function draw_default_n(n, options = [102]) { /* generate a number n */
+		// options[0] = font size
 		var canvas = document.getElementById(canvas_name);
-		
-		// resize the canvas
-		canvas.width = 90;
-		canvas.height = 120;
 		
 		draw_centered_text(
 			canvas_name, /* canvas_name */
 			n, /* text */
- 			"102px "+font_normal, /* font_settings */
-			9, /* correction_y */
+ 			options[0].toString()+"px "+font_normal, /* font_settings */
+			9*(options[0]/102), /* correction_y */
 			"rgba(240,240,240)", /* color1 */
 			"rgba(240,240,240)", /* color2 */
 			"in/out", /* shadow_style */
@@ -1166,7 +1365,7 @@ function generate_element(canvas_name, element_id) {
 		);
 	}
 	
-	function generate_followpoint(frame_number) {
+	function draw_followpoint(frame_number) {
 		const frames = 16; // the amount of frames
 		const transparant_frames = 3; // the amount of transparant frames at the beginning or at the end
 		const followpoint_size = 6;
@@ -1202,7 +1401,7 @@ function generate_element(canvas_name, element_id) {
 		}	
 	}
 	
-	function generate_grade_letter(letter){
+	function draw_grade_letter(letter){
 		var canvas = document.getElementById(canvas_name);
 		var ctx = canvas.getContext("2d");
 		var letter_y = 72; // y position of the text
@@ -1270,7 +1469,7 @@ function generate_element(canvas_name, element_id) {
 		}
 	}
 	
-	function generate_grade_letter_small(letter){
+	function draw_grade_letter_small(letter){
 		var canvas = document.getElementById(canvas_name);
 		var ctx = canvas.getContext("2d");
 		var correction_y = 4; // corrects the y position of the text
@@ -1338,7 +1537,7 @@ function generate_element(canvas_name, element_id) {
 		}
 	}
 	
-	function generate_hitburst_ingame(number) {
+	function draw_hitburst_ingame(number) {
 		var canvas = document.getElementById(canvas_name);
 		var ctx = canvas.getContext("2d");
 		
@@ -1384,7 +1583,7 @@ function generate_element(canvas_name, element_id) {
 		}
 	}
 	
-	function generate_hitburst_ranking(text) {
+	function draw_hitburst_ranking(text) {
 		var canvas = document.getElementById(canvas_name);
 		var ctx = canvas.getContext("2d");
 		
@@ -1447,16 +1646,24 @@ function generate_element(canvas_name, element_id) {
 		}
 	}
 	
-	function generate_hitcircle() {
+	function draw_hitcircle(options) {
+		// options list: [0]: type of circle ; [1]: apply the main_color
+
+		var canvas = document.getElementById(canvas_name);
+		var ctx = canvas.getContext("2d");
+		
 		const circle_diameter = 234; // in px in @2x
+		const scale = canvas.width/256;
+		
+		console.log(canvas.width, canvas.height);
 		
 		/* draw the circle */
-		switch(circle_type) {
+		switch(options[0]) {
 			case 0: // transparent
 				draw_centered_circle(
 					canvas_name, /* canvas */
 					0, /* border size */
-					circle_diameter/2-1, /* circle radius */
+					(circle_diameter/2-1)*scale, /* circle radius */
 					"none", /* gradient style */
 					0, /* gradient direction */
 					"rgba(0,0,0,0.1)", /* color 1 */
@@ -1467,98 +1674,172 @@ function generate_element(canvas_name, element_id) {
 				);
 				break;
 			case 1: // plain
-				draw_centered_circle(
-					canvas_name, /* canvas */
-					0, /* border size */
-					circle_diameter/2-1, /* circle radius */
-					"linear", /* gradient style */
-					0, /* gradient direction */
-					"rgba(110,110,110,0.65)", /* color 1 */
-					"rgba(150,150,150,0.65)", /* color 2 */
-					"none", /* shadow style */
-					0, /* shadow blur */
-					"rgba(0,0,0,0)" /* shadow color */
-				);
+				if(options[1] == true) {
+					draw_centered_circle(
+						canvas_name, /* canvas */
+						0, /* border size */
+						(circle_diameter/2-1)*scale, /* circle radius */
+						"linear", /* gradient style */
+						0, /* gradient direction */
+						prod_color("#6E6E6E", get_color_hex(main_color_id))+"A6", /* color 1 */
+						prod_color("#969696", get_color_hex(main_color_id))+"A6", /* color 2 */
+						"none", /* shadow style */
+						0, /* shadow blur */
+						"rgba(0,0,0,0)" /* shadow color */
+					);
+				} else {
+					draw_centered_circle(
+						canvas_name, /* canvas */
+						0, /* border size */
+						(circle_diameter/2-1)*scale, /* circle radius */
+						"linear", /* gradient style */
+						0, /* gradient direction */
+						"rgba(110,110,110,0.65)", /* color 1 */
+						"rgba(150,150,150,0.65)", /* color 2 */
+						"none", /* shadow style */
+						0, /* shadow blur */
+						"rgba(0,0,0,0)" /* shadow color */
+					);
+				}
 				break;
 			case 2: // ringed
-				// background
-				draw_centered_circle(
-					canvas_name, /* canvas */
-					0, /* border size */
-					circle_diameter/2-1, /* circle radius */
-					"none", /* gradient style */
-					0, /* gradient direction */
-					"rgba(64,64,64,0.65)", /* color 1 */
-					"rgba(64,64,64,0.65)", /* color 2 */
-					"none", /* shadow style */
-					0, /* shadow blur */
-					"rgba(0,0,0,0)" /* shadow color */
-				);
-				// ring
-				draw_centered_circle(
-					canvas_name, /* canvas */
-					15, /* border size */
-					(circle_diameter-40)/2, /* circle radius */
-					"linear", /* gradient style */
-					-15, /* gradient direction */
-					"rgba(245,205,205,1)", /* color 1 */
-					"rgba(205,245,245,1)", /* color 2 */
-					"none", /* shadow style */
-					0, /* shadow blur */
-					"rgba(0,0,0,0)" /* shadow color */
-				);
+				if(options[1] == true) {
+					// background
+					draw_centered_circle(
+						canvas_name, /* canvas */
+						0, /* border size */
+						(circle_diameter/2-1)*scale, /* circle radius */
+						"none", /* gradient style */
+						0, /* gradient direction */
+						prod_color("#404040", get_color_hex(main_color_id))+"A6", /* color 1 */
+						prod_color("#404040", get_color_hex(main_color_id))+"A6", /* color 2 */
+						"none", /* shadow style */
+						0, /* shadow blur */
+						"rgba(0,0,0,0)" /* shadow color */
+					);
+					// ring
+					draw_centered_circle(
+						canvas_name, /* canvas */
+						15*scale, /* border size */
+						((circle_diameter-40)/2)*scale, /* circle radius */
+						"linear", /* gradient style */
+						-15*scale, /* gradient direction */
+						prod_color("#F5CDCD", get_color_hex(main_color_id)), /* color 1 */
+						prod_color("#CDCDF5", get_color_hex(main_color_id)), /* color 2 */
+						"none", /* shadow style */
+						0, /* shadow blur */
+						"rgba(0,0,0,0)" /* shadow color */
+					);
+				} else {
+					// background
+					draw_centered_circle(
+						canvas_name, /* canvas */
+						0, /* border size */
+						(circle_diameter/2-1)*scale, /* circle radius */
+						"none", /* gradient style */
+						0, /* gradient direction */
+						"rgba(64,64,64,0.65)", /* color 1 */
+						"rgba(64,64,64,0.65)", /* color 2 */
+						"none", /* shadow style */
+						0, /* shadow blur */
+						"rgba(0,0,0,0)" /* shadow color */
+					);
+					// ring
+					draw_centered_circle(
+						canvas_name, /* canvas */
+						15*scale, /* border size */
+						((circle_diameter-40)/2)*scale, /* circle radius */
+						"linear", /* gradient style */
+						-15*scale, /* gradient direction */
+						"rgba(245,205,205,1)", /* color 1 */
+						"rgba(205,245,245,1)", /* color 2 */
+						"none", /* shadow style */
+						0, /* shadow blur */
+						"rgba(0,0,0,0)" /* shadow color */
+					);
+				}
 				break;
 			case 3: // colored border
-				// background
-				draw_centered_circle(
-					canvas_name, /* canvas */
-					0, /* border size */
-					circle_diameter/2-1, /* circle radius */
-					"none", /* gradient style */
-					0, /* gradient direction */
-					"rgba(0,0,0,0.2)", /* color 1 */
-					"rgba(0,0,0,0.2)", /* color 2 */
-					"none", /* shadow style */
-					0, /* shadow blur */
-					"rgba(0,0,0,0)" /* shadow color */
-				);
-				// ring (used as border)
-				draw_centered_circle(
-					canvas_name, /* canvas */
-					15, /* border size */
-					circle_diameter/2, /* circle radius */
-					"none", /* gradient style */
-					0, /* gradient direction */
-					"rgba(255,255,255,1)", /* color 1 */
-					"rgba(255,255,255,1)", /* color 2 */
-					"in/out", /* shadow style */
-					6, /* shadow blur */
-					"rgba(0,0,0,1)" /* shadow color */
-				);
+				if(options[1] == true){
+					// background
+					draw_centered_circle(
+						canvas_name, /* canvas */
+						0, /* border size */
+						(circle_diameter/2-1)*scale, /* circle radius */
+						"none", /* gradient style */
+						0, /* gradient direction */
+						"rgba(0,0,0,0.2)", /* color 1 */
+						"rgba(0,0,0,0.2)", /* color 2 */
+						"none", /* shadow style */
+						0, /* shadow blur */
+						"rgba(0,0,0,0)" /* shadow color */
+					);
+					// ring (used as border)
+					draw_centered_circle(
+						canvas_name, /* canvas */
+						15*scale, /* border size */
+						(circle_diameter/2)*scale, /* circle radius */
+						"none", /* gradient style */
+						0, /* gradient direction */
+						get_color_hex(main_color_id)+"FF", /* color 1 */
+						get_color_hex(main_color_id)+"FF", /* color 2 */
+						"in/out", /* shadow style */
+						6*scale, /* shadow blur */
+						"rgba(0,0,0,1)" /* shadow color */
+					);
+				} else {
+					// background
+					draw_centered_circle(
+						canvas_name, /* canvas */
+						0, /* border size */
+						(circle_diameter/2-1)*scale, /* circle radius */
+						"none", /* gradient style */
+						0, /* gradient direction */
+						"rgba(0,0,0,0.2)", /* color 1 */
+						"rgba(0,0,0,0.2)", /* color 2 */
+						"none", /* shadow style */
+						0, /* shadow blur */
+						"rgba(0,0,0,0)" /* shadow color */
+					);
+					// ring (used as border)
+					draw_centered_circle(
+						canvas_name, /* canvas */
+						15*scale, /* border size */
+						(circle_diameter/2)*scale, /* circle radius */
+						"none", /* gradient style */
+						0, /* gradient direction */
+						"rgba(255,255,255,1)", /* color 1 */
+						"rgba(255,255,255,1)", /* color 2 */
+						"in/out", /* shadow style */
+						6*scale, /* shadow blur */
+						"rgba(0,0,0,1)" /* shadow color */
+					);
+				}
 				break;
 		}
 	}
 	
-	function generate_hitcircleoverlay() {
-		const circle_diameter = 234; // in px in @2x
-		
+	function draw_hitcircleoverlay(options) {
+		// options[0] = style of circle
 		var canvas = document.getElementById(canvas_name);
 		var ctx = canvas.getContext("2d");
 		
+		const circle_diameter = 234; // in px in @2x
+		const scale = canvas.width/256;
 		
 		/* draw the circle */
-		switch(circle_type) {
+		switch(options[0]) {
 			case 0: // transparent
 				draw_centered_circle(
 					canvas_name, /* canvas */
-					15, /* border size */
-					circle_diameter/2, /* circle radius */
+					15*scale, /* border size */
+					(circle_diameter/2)*scale, /* circle radius */
 					"none", /* gradient style */
 					0, /* gradient direction */
 					"rgba(255,255,255,1)", /* color 1 */
 					"rgba(255,255,255,1)", /* color 2 */
 					"out", /* shadow style */
-					6, /* shadow blur */
+					6*scale, /* shadow blur */
 					"rgba(0,0,0,1)" /* shadow color */
 				);
 				break;
@@ -1571,54 +1852,43 @@ function generate_element(canvas_name, element_id) {
 				glass_gradient.addColorStop(1, "rgba(0,0,0,0)");
 				ctx.fillStyle = glass_gradient;
 				ctx.beginPath();
-				ctx.arc(canvas.width/2, canvas.height/2, circle_diameter/2, 0, 2*Math.PI);
+				ctx.arc(canvas.width/2, canvas.height/2, (circle_diameter/2)*scale, 0, 2*Math.PI);
 				ctx.fill();
 				ctx.closePath();
 				// circle
 				draw_centered_circle(
 					canvas_name, /* canvas */
-					15, /* border size */
-					circle_diameter/2, /* circle radius */
+					15*scale, /* border size */
+					(circle_diameter/2)*scale, /* circle radius */
 					"linear", /* gradient style */
 					0, /* gradient direction */
 					"rgba(255,255,255,1)", /* color 1 */
 					"rgba(255,255,255,1)", /* color 2 */
 					"in/out", /* shadow style */
-					6, /* shadow blur */
+					6*scale, /* shadow blur */
 					"rgba(0,0,0,1)" /* shadow color */
 				);
 				break;
 			case 2: // ringed
-				// 3d effect
-				var glass_gradient = ctx.createRadialGradient(canvas.width/2, -1.5*canvas.height, 5, canvas.width/2, -1.5*canvas.height, 2*canvas.height);
-				glass_gradient.addColorStop(0, "rgba(50,50,50,0)");
-				glass_gradient.addColorStop(0.6, "rgba(50,50,50,0)");
-				glass_gradient.addColorStop(0.999, "rgba(255,255,255,0.06)");
-				glass_gradient.addColorStop(1, "rgba(0,0,0,0)");
-				ctx.fillStyle = glass_gradient;
-				ctx.beginPath();
-				ctx.arc(canvas.width/2, canvas.height/2, circle_diameter/2, 0, 2*Math.PI);
-				ctx.fill();
-				ctx.closePath();
 				// circle
 				draw_centered_circle(
 					canvas_name, /* canvas */
-					15, /* border size */
-					circle_diameter/2, /* circle radius */
+					15*scale, /* border size */
+					(circle_diameter/2)*scale, /* circle radius */
 					"none", /* gradient style */
 					0, /* gradient direction */
 					"rgba(255,255,255,1)", /* color 1 */
 					"rgba(255,255,255,1)", /* color 2 */
 					"out", /* shadow style */
-					6, /* shadow blur */
+					6*scale, /* shadow blur */
 					"rgba(0,0,0,1)" /* shadow color */
 				);
 				break;
 			case 3: // colored border
 				draw_centered_circle(
 					canvas_name, /* canvas */
-					15, /* border size */
-					circle_diameter/2, /* circle radius */
+					15*scale, /* border size */
+					(circle_diameter/2)*scale, /* circle radius */
 					"none", /* gradient style */
 					0, /* gradient direction */
 					"rgba(255,255,255,0.08)", /* color 1 */
@@ -1631,7 +1901,7 @@ function generate_element(canvas_name, element_id) {
 		}
 	}
 	
-	function generate_inputoverlay_background() {
+	function draw_inputoverlay_background() {
 		var canvas_temp = document.getElementById("canvas_temp");
 		var ctx = canvas_temp.getContext("2d");
 		const key_size = 68;
@@ -1708,7 +1978,7 @@ function generate_element(canvas_name, element_id) {
 	
 	
 	
-	function generate_inputoverlay_key() {
+	function draw_inputoverlay_key() {
 		const key_size = 68;
 		const key_border_radius = 6;
 		draw_rounded_rect(
@@ -1729,7 +1999,7 @@ function generate_element(canvas_name, element_id) {
 		);
 	}
 	
-	function generate_lighting() {
+	function draw_lighting() {
 		const lighting_size = 92;
 		// get canvas
 		var canvas = document.getElementById(canvas_name);
@@ -1749,7 +2019,7 @@ function generate_element(canvas_name, element_id) {
 		ctx.closePath();
 	}
 	
-	function generate_mod_icon(mod) {
+	function draw_mod_icon(mod) {
 		var nerf_color = "#76ff03"; // lightGreen A400 normal
 		var buff_color = "#ff1744"; // red A400 normal
 		var other_color = "#2979ff"; // blue A400 normal
@@ -1823,7 +2093,7 @@ function generate_element(canvas_name, element_id) {
 		);
 	}
 	
-	function generate_menu_back() {
+	function draw_menu_back() {
 		// get canvas
 		var canvas = document.getElementById(canvas_name);
 		var ctx = canvas.getContext('2d');
@@ -1882,7 +2152,7 @@ function generate_element(canvas_name, element_id) {
 		ctx.fillText("back", 148, 6+(180-6)/2+9);
 	}
 	
-	function generate_menu_button_background() {
+	function draw_menu_button_background() {
 		draw_rounded_rect(
 			canvas_name, /* canvas name */
 			12, /* x */
@@ -1901,23 +2171,23 @@ function generate_element(canvas_name, element_id) {
 		);
 	}
 	
-	function generate_mode_m(mode) {
+	function draw_mode_m(mode) {
 		var canvas = document.getElementById(canvas_name);
 		draw_mode_icon(canvas_name, mode, canvas.width/2, canvas.height/2, (canvas.width-30)/2, "#FFFFFF");
 	}
 	
-	function generate_mode_m_med(mode) {
+	function draw_mode_m_med(mode) {
 		var canvas = document.getElementById(canvas_name);
 		draw_mode_icon(canvas_name, mode, canvas.width/2, canvas.height/2, (canvas.width-30)/2, "#FFFFFF");
 	}
 	
-	function generate_mode_m_small(mode) {
+	function draw_mode_m_small(mode) {
 		var canvas = document.getElementById(canvas_name);
 		var ctx = canvas.getContext("2d");
 		
 		/* bar at the left */
 		ctx.strokeStyle = "#FFFFFF";
-		ctx.lineWidth = 9; // same than the top line at generate_selection_mode_button()
+		ctx.lineWidth = 9; // same than the top line at draw_selection_mode_button()
 		ctx.beginPath();
 		ctx.moveTo(1355,318);
 		ctx.lineTo(2212,318);
@@ -1928,7 +2198,7 @@ function generate_element(canvas_name, element_id) {
 		draw_mode_icon(canvas_name, mode, 2204, 1452, 42, "#FFFFFF");
 	}
 	
-	function generate_play_skip() {
+	function draw_play_skip() {
 		/* 'skip' text */
 		x1 = 0;
 		y1 = 0;
@@ -1953,7 +2223,7 @@ function generate_element(canvas_name, element_id) {
 		ctx.fill();
 	}
 	
-	function generate_ranking_graph() {
+	function draw_ranking_graph() {
 		// background
 		draw_rounded_rect(
 			canvas_name, /* canvas name */
@@ -1999,7 +2269,7 @@ function generate_element(canvas_name, element_id) {
 		ctx.fillText("Time", 566, 277);
 	}
 	
-	function generate_ranking_panel() {
+	function draw_ranking_panel() {
 		var canvas = document.getElementById(canvas_name);
 		var ctx = canvas.getContext("2d");
 		
@@ -2078,7 +2348,7 @@ function generate_element(canvas_name, element_id) {
 		ctx.fillText("Accuracy", 630, 808);
 	}
 	
-	function generate_ranking_perfect() {
+	function draw_ranking_perfect() {
 		var canvas = document.getElementById(canvas_name);
 		var ctx = canvas.getContext("2d");
 		var gradient;
@@ -2100,7 +2370,7 @@ function generate_element(canvas_name, element_id) {
 		ctx.fillText("Perfect!", 22, canvas.height-26);
 	}
 	
-	function generate_ranking_title() {
+	function draw_ranking_title() {
 		// get gradient
 		x1 = 0;
 		y1 = 0;
@@ -2124,7 +2394,7 @@ function generate_element(canvas_name, element_id) {
 		ctx.fillText("Results", canvas.width/2, canvas.height/2-48); // pos at top left corner
 	}
 	
-	function generate_reversearrow(){
+	function draw_reversearrow(){
 		var canvas = document.getElementById(canvas_name);
 		var ctx = canvas.getContext("2d");
 		// slider end:
@@ -2157,7 +2427,7 @@ function generate_element(canvas_name, element_id) {
 		ctx.closePath();
 	}
 	
-	function generate_pause_button(text) {
+	function draw_pause_button(text) {
 		draw_centered_text(
 			canvas_name, /* canvas_name */
 			text, /* text */
@@ -2171,7 +2441,7 @@ function generate_element(canvas_name, element_id) {
 		);
 	}
 	
-	function generate_pause_overlay() {
+	function draw_pause_overlay() {
 		var canvas = document.getElementById(canvas_name);
 		var ctx = canvas.getContext("2d");
 		var gradient;
@@ -2199,7 +2469,7 @@ function generate_element(canvas_name, element_id) {
 		ctx.fillText("PAUSED", (canvas.width/2)+0, 180);
 	}
 	
-	function generate_score_n(n) { /* generate a number n */
+	function draw_score_n(n) { /* generate a number n */
 		var canvas = document.getElementById(canvas_name);
 		var ctx = canvas.getContext("2d");
 		var font = "78px "+font_normal;
@@ -2246,7 +2516,7 @@ function generate_element(canvas_name, element_id) {
 		}
  	}
 	
-	function generate_scorebar_bg(){
+	function draw_scorebar_bg(){
 		var canvas = document.getElementById(canvas_name);
 		var ctx = canvas.getContext("2d");
 		var x1, x2, y1, y2; // for gradients
@@ -2365,8 +2635,8 @@ function generate_element(canvas_name, element_id) {
 					ctx.stroke();
 					ctx.closePath();
 					
-					if(i<10) { // 5bar
-						ctx.beginPath(); // 10bar
+					if(i<10) { // 5 tick
+						ctx.beginPath(); // 10 tick
 						ctx.moveTo(numbers_start+(i+0.5)*numbers_step, 61);
 						ctx.lineTo(numbers_start+(i+0.5)*numbers_step, 61+2);
 						ctx.stroke();
@@ -2400,7 +2670,7 @@ function generate_element(canvas_name, element_id) {
 		
 	}
 	
-	function generate_scorebar_colour(){
+	function draw_scorebar_colour(){
 		var bar_x, bar_y, bar_width, bar_height;
 		switch(scorebar_type) {
 			case 0:
@@ -2435,7 +2705,7 @@ function generate_element(canvas_name, element_id) {
 		);
 	}
 	
-	function generate_scoreentry_n(n) { /* generate a number n */
+	function draw_scoreentry_n(n) { /* generate a number n */
 		var canvas = document.getElementById(canvas_name);
 		var ctx = canvas.getContext("2d");
 		var font = "22px "+font_normal;
@@ -2480,7 +2750,7 @@ function generate_element(canvas_name, element_id) {
 		}
  	}
 	
-	function generate_section_text(text) { // pass/fail
+	function draw_section_text(text) { // pass/fail
 		draw_centered_text(
 			canvas_name, /* canvas_name */
 			text, /* text */
@@ -2494,7 +2764,7 @@ function generate_element(canvas_name, element_id) {
 		);
 	}
 	
-	function generate_selection_mode_button(text, over) { // mode, mods, random, options
+	function draw_selection_mode_button(text, over) { // mode, mods, random, options
 		/* over = generate the -over version */
 		var canvas = document.getElementById(canvas_name);
 		var ctx = canvas.getContext("2d");
@@ -2627,7 +2897,7 @@ function generate_element(canvas_name, element_id) {
 		}
 	}
 	
-	function generate_selection_tab() {
+	function draw_selection_tab() {
 		var canvas = document.getElementById(canvas_name);
 		draw_rounded_rect(
 			canvas_name, /* canvas name */
@@ -2647,7 +2917,7 @@ function generate_element(canvas_name, element_id) {
 		);
 	}
 	
-	function generate_sliderb() {
+	function draw_sliderb() {
 		const ball_size = 200; // diameter in px of the ball
 		// background
 		draw_centered_circle(
@@ -2677,7 +2947,7 @@ function generate_element(canvas_name, element_id) {
 		);
 	}
 
-	function generate_sliderfollowcircle() {
+	function draw_sliderfollowcircle() {
 		const circle_size = 400; // diameter in px of the circle
 		draw_centered_circle(
 			canvas_name, /* canvas */
@@ -2693,7 +2963,7 @@ function generate_element(canvas_name, element_id) {
 		);
 	}
 	
-	function generate_sliderscorepoint(){
+	function draw_sliderscorepoint(){
 		const circle_size = 28; // diameter in px of the circle
 		draw_centered_circle(
 			canvas_name, /* canvas */
@@ -2709,137 +2979,129 @@ function generate_element(canvas_name, element_id) {
 		);
 	}
 	
-	function generate_spinner_approachcircle() {
+	function draw_spinner_approachcircle() {
+		// options[0] = type of spinner
 		var canvas = document.getElementById(canvas_name);
 		var ctx = canvas.getContext("2d");
 		var circle_size;
+		var scale = canvas.height/630;
 		switch(spinner_type) {
 			case 0: // the big spinner
-				circle_size = 568; // diameter in px of the approachcircle (should be around 50% of the spinner-circle size)
-				// resize canvas
-				canvas.width = 630;
-				canvas.height = 630;
+				circle_size = 568; // diameter in px of the approachcircle at 100% size (should be around 50% of the spinner-circle size)
 				// init ctx
-				ctx.strokeStyle = main_color;
-				ctx.lineWidth = 7;
-				ctx.shadowBlur = 2;
-				ctx.shadowColor = main_color;
+				ctx.strokeStyle = get_color_hex(main_color_id);
+				ctx.lineWidth = 7*scale;
+				ctx.shadowBlur = 2*scale;
+				ctx.shadowColor = get_color_hex(main_color_id);
 				// draw
 				for(var i=0 ; i<18 ; i++) {
 					ctx.beginPath();
-					ctx.arc(canvas.width/2, canvas.height/2, circle_size/2, (20*i)/180*Math.PI, (20*i+15)/180*Math.PI);
+					ctx.arc(canvas.width/2, canvas.height/2, (circle_size/2)*scale, (20*i)/180*Math.PI, (20*i+15)/180*Math.PI);
 					ctx.stroke();
 					ctx.closePath();
 				}
 				break;
 			case 1: // the small
 				circle_size = 340;
-				// resize canvas
-				canvas.width = 370;
-				canvas.height = 370;
 				// draw
 				draw_centered_circle(
 					canvas_name, /* canvas */
-					7, /* border size */
-					circle_size/2, /* circle radius */
+					7*scale, /* border size */
+					(circle_size/2)*scale, /* circle radius */
 					"none", /* gradient style */
 					0, /* gradient direction */
-					main_color, /* color 1 */
-					main_color, /* color 2 */
+					get_color_hex(main_color_id), /* color 1 */
+					get_color_hex(main_color_id), /* color 2 */
 					"in/out", /* shadow style */
-					2, /* shadow blur */
-					main_color /* shadow color */
+					2*scale, /* shadow blur */
+					get_color_hex(main_color_id) /* shadow color */
 				);
 				break;
 		}
 		
 	}
 	
-	function generate_spinner_circle(){
+	function draw_spinner_circle(){
+		// options[0] = style of spinner
 		var canvas = document.getElementById(canvas_name);
 		var ctx = canvas.getContext("2d");
 		var circle_size; // diameter in px of the approachcircle
+		var scale = canvas.height/1150;
 		switch(spinner_type) {
 			case 0:
 				circle_size = 1100;
-				// resize canvas
-				canvas.width = 1150;
-				canvas.height = 1150;
 				// outer border
 				draw_centered_circle(
 					canvas_name, /* canvas */
-					14, /* border size */
-					circle_size/2, /* circle radius */
+					14*scale, /* border size */
+					(circle_size/2)*scale, /* circle radius */
 					"none", /* gradient style */
 					0, /* gradient direction */
 					"rgba(255,255,255,1)", /* color 1 */
 					"rgba(255,255,255,1)", /* color 2 */
 					"in/out", /* shadow style */
-					2, /* shadow blur */
+					2*scale, /* shadow blur */
 					"rgba(255,255,255,1)" /* shadow color */
 				);
 				// inner circle
 				draw_centered_circle(
 					canvas_name, /* canvas */
-					14, /* border size */
-					circle_size/2/20, /* circle radius */
+					14*scale, /* border size */
+					(circle_size/2/20)*scale, /* circle radius */
 					"none", /* gradient style */
 					0, /* gradient direction */
 					"rgba(255,255,255,1)", /* color 1 */
 					"rgba(255,255,255,1)", /* color 2 */
 					"in/out", /* shadow style */
-					2, /* shadow blur */
+					2*scale, /* shadow blur */
 					"rgba(255,255,255,1)" /* shadow color */
 				);
 				// the 2 dots around the center circle
-				var d = 50; // distance between the central circle and the dots center
-				var s = 14; // the diameter of these circle
+				var d = 50*scale; // distance between the central circle and the dots center
+				var s = 14*scale; // the diameter of these circle
 				ctx.lineWidth = 0;
 				ctx.fillStyle = "rgba(255,255,255,1)";
 				ctx.beginPath();
-				ctx.arc(canvas.width/2-d, canvas.height/2, s/2, 0, 2*Math.PI);
+				ctx.arc(canvas.width/2-d, canvas.height/2, (s/2)*scale, 0, 2*Math.PI);
 				ctx.fill();
 				ctx.closePath();
 				ctx.beginPath();
-				ctx.arc(canvas.width/2+d, canvas.height/2, s/2, 0, 2*Math.PI);
+				ctx.arc(canvas.width/2+d, canvas.height/2, (s/2)*scale, 0, 2*Math.PI);
 				ctx.fill();
 				ctx.closePath();
 				break;
 			case 1:
 				circle_size = 650;
-				// resize canvas
-				canvas.width = 700;
-				canvas.height = 700;
 				// init ctx
 				ctx.strokeStyle = "rgba(255,255,255,1)";
-				ctx.lineWidth = 14;
-				ctx.shadowBlur = 2;
+				ctx.lineWidth = 14*scale;
+				ctx.shadowBlur = 2*scale;
 				ctx.shadowColor = "rgba(255,255,255,1)";
 				// draw
 				for(var i=0 ; i<2 ; i++) {
 					ctx.beginPath();
-					ctx.arc(canvas.width/2, canvas.height/2, circle_size/2, (180*i)/180*Math.PI, (180*i+150)/180*Math.PI);
+					ctx.arc(canvas.width/2, canvas.height/2, (circle_size/2)*scale, (180*i)/180*Math.PI, (180*i+150)/180*Math.PI);
 					ctx.stroke();
 					ctx.closePath();
 				}
 				// inner circle
 				draw_centered_circle(
 					canvas_name, /* canvas */
-					14, /* border size */
-					circle_size/2/20, /* circle radius */
+					14*scale, /* border size */
+					(circle_size/2/20)*scale, /* circle radius */
 					"none", /* gradient style */
 					0, /* gradient direction */
 					"rgba(255,255,255,1)", /* color 1 */
 					"rgba(255,255,255,1)", /* color 2 */
 					"in/out", /* shadow style */
-					2, /* shadow blur */
+					2*scale, /* shadow blur */
 					"rgba(255,255,255,1)" /* shadow color */
 				);
 				break;
 		}
 	}
 	
-	function generate_spinner_clear(){
+	function draw_spinner_clear(){
 		var canvas = document.getElementById(canvas_name);
 		var ctx = canvas.getContext("2d");
 		ctx.lineWidth = 15;
@@ -2854,34 +3116,31 @@ function generate_element(canvas_name, element_id) {
 		ctx.closePath();
 	}
 	
-	function generate_spinner_metre(){
+	function draw_spinner_metre(){
+		// options[0] = type of spinner ; options[1] = apply the y correction (int)
 		var canvas = document.getElementById(canvas_name);
 		var ctx = canvas.getContext("2d");
+		var scale = canvas.height/1384;
 		const circle_size = 1048; // diameter in px of the approachcircle (should be a little smaller than the spinner-circle)
 		switch(spinner_type) {
 			case 0:
-				// resize canvas
-				canvas.width = 2048;
-				canvas.height = 1384;
 				// draw
-				ctx.strokeStyle = main_color;
-				ctx.lineWidth = 14;
-				ctx.shadowBlur = 2;
+				ctx.strokeStyle = get_color_hex(main_color_id);
+				ctx.lineWidth = 14*scale;
+				ctx.shadowBlur = 2*scale;
 				ctx.shadowColor = main_color;
 				ctx.beginPath();
-				ctx.arc(canvas.width/2, canvas.height/2+9, circle_size/2, 0, 2*Math.PI);
+				ctx.arc(canvas.width/2, canvas.height/2+9, (circle_size/2)*scale, 0, 2*Math.PI);
 				ctx.stroke();
 				ctx.closePath();
 				break;
+				
 			case 1: // nothing, no spinner-metre for this
-				// resize canvas
-				canvas.width = 1;
-				canvas.height = 1;
 				break;
 		}
 	}
 	
-	function generate_spinner_rpm(){
+	function draw_spinner_rpm(){
 		var canvas = document.getElementById(canvas_name);
 		var ctx = canvas.getContext("2d");
 		
@@ -2914,7 +3173,7 @@ function generate_element(canvas_name, element_id) {
 		ctx.fillText(":", canvas.width/2, canvas.height/2+3);
 	}
 	
-	function generate_star() {
+	function draw_star() {
 		var canvas = document.getElementById(canvas_name);
 		var ctx = canvas.getContext("2d");
 		var points = [
@@ -2936,229 +3195,384 @@ function generate_element(canvas_name, element_id) {
 		ctx.fill();
 	}
 	
+	switch(element_name) { /* files names */
+		case "approachcircle": draw_approachcircle(); break;
+		case "arrow-warning": draw_arrow_warning(); break;
+		case "button-left": draw_button("left"); break;
+		case "button-middle": draw_button("middle"); break;
+		case "button-right": draw_button("right"); break;
+		case "combo-0": draw_combo_n(0); break;
+		case "combo-1": draw_combo_n(1); break;
+		case "combo-2": draw_combo_n(2); break;
+		case "combo-3": draw_combo_n(3); break;
+		case "combo-4": draw_combo_n(4); break;
+		case "combo-5": draw_combo_n(5); break;
+		case "combo-6": draw_combo_n(6); break;
+		case "combo-7": draw_combo_n(7); break;
+		case "combo-8": draw_combo_n(8); break;
+		case "combo-9": draw_combo_n(9); break;
+		case "combo-x": draw_combo_n("x"); break;
+		case "count1": draw_count("1"); break;
+		case "count2": draw_count("2"); break;
+		case "count3": draw_count("3"); break;
+		case "cursor": draw_cursor(); break;
+		case "cursortrail": draw_cursortrail(); break;
+		case "default-0": draw_default_n(0, options); break;
+		case "default-1": draw_default_n(1, options); break;
+		case "default-2": draw_default_n(2, options); break;
+		case "default-3": draw_default_n(3, options); break;
+		case "default-4": draw_default_n(4, options); break;
+		case "default-5": draw_default_n(5, options); break;
+		case "default-6": draw_default_n(6, options); break;
+		case "default-7": draw_default_n(7, options); break;
+		case "default-8": draw_default_n(8, options); break;
+		case "default-9": draw_default_n(9, options); break;
+		case "fail-background": draw_fail_background(); break;
+		case "followpoint-0": draw_followpoint(0); break;
+		case "followpoint-1": draw_followpoint(1); break;
+		case "followpoint-2": draw_followpoint(2); break;
+		case "followpoint-3": draw_followpoint(3); break;
+		case "followpoint-4": draw_followpoint(4); break;
+		case "followpoint-5": draw_followpoint(5); break;
+		case "followpoint-6": draw_followpoint(6); break;
+		case "followpoint-7": draw_followpoint(7); break;
+		case "followpoint-8": draw_followpoint(8); break;
+		case "followpoint-9": draw_followpoint(9); break;
+		case "followpoint-10": draw_followpoint(10); break;
+		case "followpoint-11": draw_followpoint(11); break;
+		case "followpoint-12": draw_followpoint(12); break;
+		case "followpoint-13": draw_followpoint(13); break;
+		case "followpoint-14": draw_followpoint(14); break;
+		case "followpoint-15": draw_followpoint(15); break;
+		case "go": draw_count("go"); break;
+		case "hit0": draw_hitburst_ranking("0"); break;
+		case "hit50": draw_hitburst_ranking("50"); break;
+		case "hit100": draw_hitburst_ranking("100"); break;
+		case "hit100k": draw_hitburst_ranking("100k"); break;
+		case "hit300": draw_hitburst_ranking("300"); break;
+		case "hit300g": draw_hitburst_ranking("300g"); break;
+		case "hit300k": draw_hitburst_ranking("300k"); break;
+		case "hit0-0": draw_hitburst_ingame("0"); break;
+		case "hit50-0": draw_hitburst_ingame("50"); break;
+		case "hit100-0": draw_hitburst_ingame("100"); break;
+		case "hit100k-0": draw_hitburst_ingame("100"); break;
+		case "hitcircle": draw_hitcircle(options); break;
+		case "hitcircleoverlay": draw_hitcircleoverlay(options); break;
+		case "inputoverlay-background": draw_inputoverlay_background(); break;
+		case "inputoverlay-key": draw_inputoverlay_key(); break;
+		case "lighting": draw_lighting(); break;
+		case "menu-back": draw_menu_back(); break;
+		case "menu-button-background": draw_menu_button_background(); break;
+		case "mode-fruits": draw_mode_m("fruits"); break;
+		case "mode-mania": draw_mode_m("mania"); break;
+		case "mode-osu": draw_mode_m("osu"); break;
+		case "mode-taiko": draw_mode_m("taiko"); break;
+		case "mode-fruits-med": draw_mode_m_med("fruits"); break;
+		case "mode-mania-med": draw_mode_m_med("mania"); break;
+		case "mode-osu-med": draw_mode_m_med("osu"); break;
+		case "mode-taiko-med": draw_mode_m_med("taiko"); break;
+		case "mode-fruits-small": draw_mode_m_small("fruits"); break;
+		case "mode-mania-small": draw_mode_m_small("mania"); break;
+		case "mode-osu-small": draw_mode_m_small("osu"); break;
+		case "mode-taiko-small": draw_mode_m_small("taiko"); break;
+		case "pause-back": draw_pause_button("Back"); break;
+		case "pause-continue": draw_pause_button("Continue"); break;
+		case "pause-replay": draw_pause_button("Watch replay"); break;
+		case "pause-retry": draw_pause_button("Retry"); break;
+		case "pause-overlay": draw_pause_overlay(); break;
+		case "play-skip": draw_play_skip(); break;
+		case "ranking-graph": draw_ranking_graph(); break;
+		case "ranking-panel": draw_ranking_panel(); break;
+		case "ranking-perfect": draw_ranking_perfect(); break;
+		case "ranking-title": draw_ranking_title(); break;
+		case "ranking-a": draw_grade_letter("A"); break;
+		case "ranking-b": draw_grade_letter("B"); break;
+		case "ranking-c": draw_grade_letter("C"); break;
+		case "ranking-d": draw_grade_letter("D"); break;
+		case "ranking-s": draw_grade_letter("S"); break;
+		case "ranking-sh": draw_grade_letter("SH"); break;
+		case "ranking-x": draw_grade_letter("SS"); break;
+		case "ranking-xh": draw_grade_letter("SSH"); break;
+		case "ranking-a-small": draw_grade_letter_small("A"); break;
+		case "ranking-b-small": draw_grade_letter_small("B"); break;
+		case "ranking-c-small": draw_grade_letter_small("C"); break;
+		case "ranking-d-small": draw_grade_letter_small("D"); break;
+		case "ranking-s-small": draw_grade_letter_small("S"); break;
+		case "ranking-sh-small": draw_grade_letter_small("SH"); break;
+		case "ranking-x-small": draw_grade_letter_small("SS"); break;
+		case "ranking-xh-small": draw_grade_letter_small("SSH"); break;
+		case "ready": draw_count("ready"); break;
+		case "reversearrow": draw_reversearrow(); break;
+		case "section-fail": draw_section_text("Fail"); break;
+		case "section-pass": draw_section_text("Pass"); break;
+		case "score-0": draw_score_n(0); break;
+		case "score-1": draw_score_n(1); break;
+		case "score-2": draw_score_n(2); break;
+		case "score-3": draw_score_n(3); break;
+		case "score-4": draw_score_n(4); break;
+		case "score-5": draw_score_n(5); break;
+		case "score-6": draw_score_n(6); break;
+		case "score-7": draw_score_n(7); break;
+		case "score-8": draw_score_n(8); break;
+		case "score-9": draw_score_n(9); break;
+		case "score-comma": draw_score_n(","); break;
+		case "score-dot": draw_score_n("."); break;
+		case "score-percent": draw_score_n("%"); break;
+		case "score-x": draw_score_n("x"); break;
+		case "scorebar-bg": draw_scorebar_bg(); break;
+		case "scorebar-colour": draw_scorebar_colour(); break;
+		case "scoreentry-0": draw_scoreentry_n(0); break;
+		case "scoreentry-1": draw_scoreentry_n(1); break;
+		case "scoreentry-2": draw_scoreentry_n(2); break;
+		case "scoreentry-3": draw_scoreentry_n(3); break;
+		case "scoreentry-4": draw_scoreentry_n(4); break;
+		case "scoreentry-5": draw_scoreentry_n(5); break;
+		case "scoreentry-6": draw_scoreentry_n(6); break;
+		case "scoreentry-7": draw_scoreentry_n(7); break;
+		case "scoreentry-8": draw_scoreentry_n(8); break;
+		case "scoreentry-9": draw_scoreentry_n(9); break;
+		case "scoreentry-comma": draw_scoreentry_n(","); break;
+		case "scoreentry-dot": draw_scoreentry_n("."); break;
+		case "scoreentry-percent": draw_scoreentry_n("%"); break;
+		case "scoreentry-x": draw_scoreentry_n("x"); break;
+		case "selection-mode": draw_selection_mode_button("Mode", false); break;
+		case "selection-mode-over": draw_selection_mode_button("Mode", true); break;
+		case "selection-mods": draw_selection_mode_button("Mods", false); break;
+		case "selection-mods-over": draw_selection_mode_button("Mods", true); break;
+		case "selection-random": draw_selection_mode_button("Random", false); break;
+		case "selection-random-over": draw_selection_mode_button("Random", true); break;
+		case "selection-options": draw_selection_mode_button("Options", false); break;
+		case "selection-options-over": draw_selection_mode_button("Options", true); break;
+		case "selection-mod-autoplay": draw_mod_icon("AT"); break;
+		case "selection-mod-cinema": draw_mod_icon("CN"); break;
+		case "selection-mod-doubletime": draw_mod_icon("DT"); break;
+		case "selection-mod-easy": draw_mod_icon("EZ"); break;
+		case "selection-mod-fadein": draw_mod_icon("FI"); break;
+		case "selection-mod-flashlight": draw_mod_icon("FL"); break;
+		case "selection-mod-halftime": draw_mod_icon("HT"); break;
+		case "selection-mod-hardrock": draw_mod_icon("HR"); break;
+		case "selection-mod-hidden": draw_mod_icon("HD"); break;
+		case "selection-mod-key1": draw_mod_icon("1K"); break;
+		case "selection-mod-key2": draw_mod_icon("2K"); break;
+		case "selection-mod-key3": draw_mod_icon("3K"); break;
+		case "selection-mod-key4": draw_mod_icon("4K"); break;
+		case "selection-mod-key5": draw_mod_icon("5K"); break;
+		case "selection-mod-key6": draw_mod_icon("6K"); break;
+		case "selection-mod-key7": draw_mod_icon("7K"); break;
+		case "selection-mod-key8": draw_mod_icon("8K"); break;
+		case "selection-mod-key9": draw_mod_icon("9K"); break;
+		case "selection-mod-keycoop": draw_mod_icon("2P"); break;
+		case "selection-mod-mirror": draw_mod_icon("MR"); break;
+		case "selection-mod-nightcore": draw_mod_icon("NC"); break;
+		case "selection-mod-nofail": draw_mod_icon("NF"); break;
+		case "selection-mod-perfect": draw_mod_icon("PF"); break;
+		case "selection-mod-random": draw_mod_icon("RD"); break;
+		case "selection-mod-relax": draw_mod_icon("RX"); break;
+		case "selection-mod-relax2": draw_mod_icon("AP"); break;
+		case "selection-mod-scorev2": draw_mod_icon("v2"); break;
+		case "selection-mod-spunout": draw_mod_icon("SO"); break;
+		case "selection-mod-suddendeath": draw_mod_icon("SD"); break;
+		case "selection-mod-target": draw_mod_icon("TP"); break;
+		case "selection-mod-touchdevice": draw_mod_icon("TD"); break;
+		case "selection-tab": draw_selection_tab(); break;
+		case "sliderb0": draw_sliderb(); break;
+		case "sliderfollowcircle": draw_sliderfollowcircle(); break;
+		case "sliderscorepoint": draw_sliderscorepoint(); break;
+		case "spinner-approachcircle": draw_spinner_approachcircle(); break;
+		case "spinner-clear": draw_spinner_clear(); break;
+		case "spinner-circle": draw_spinner_circle(); break;
+		case "spinner-metre": draw_spinner_metre(); break;
+		case "spinner-rpm": draw_spinner_rpm(); break;
+		case "star": draw_star(); break;
+	}
+}
+
+function draw_preview() {
 	
-	/* create 2x times versions */
-	// create the canvas
-	new_element = document.createElement("canvas");
-	new_element.id = elements_2x[element_id][1]+"_2x"; // give him an id
-	document.getElementById("generated_elements_2x").appendChild(new_element);
-	// get the canvas
-	canvas_name = elements_2x[element_id][1]+"_2x";
-	canvas = document.getElementById(canvas_name);
-	ctx = canvas.getContext("2d");
-	// resize the canvas
-	canvas.width = elements_2x[element_id][2];
-	canvas.height = elements_2x[element_id][3];
-	// clear the canvas
-	ctx.clearRect(0, 0, canvas.width, canvas.height);
-	
-	switch(elements_2x[element_id][0]) { /* files names */
-		case "approachcircle": generate_approachcircle(); break;
-		case "arrow-warning": generate_arrow_warning(); break;
-		case "button-left": generate_button("left"); break;
-		case "button-middle": generate_button("middle"); break;
-		case "button-right": generate_button("right"); break;
-		case "combo-0": generate_combo_n(0); break;
-		case "combo-1": generate_combo_n(1); break;
-		case "combo-2": generate_combo_n(2); break;
-		case "combo-3": generate_combo_n(3); break;
-		case "combo-4": generate_combo_n(4); break;
-		case "combo-5": generate_combo_n(5); break;
-		case "combo-6": generate_combo_n(6); break;
-		case "combo-7": generate_combo_n(7); break;
-		case "combo-8": generate_combo_n(8); break;
-		case "combo-9": generate_combo_n(9); break;
-		case "combo-x": generate_combo_n("x"); break;
-		case "count1": generate_count("1"); break;
-		case "count2": generate_count("2"); break;
-		case "count3": generate_count("3"); break;
-		case "cursor": generate_cursor(); break;
-		case "cursortrail": generate_cursortrail(); break;
-		case "default-0": generate_default_n(0); break;
-		case "default-1": generate_default_n(1); break;
-		case "default-2": generate_default_n(2); break;
-		case "default-3": generate_default_n(3); break;
-		case "default-4": generate_default_n(4); break;
-		case "default-5": generate_default_n(5); break;
-		case "default-6": generate_default_n(6); break;
-		case "default-7": generate_default_n(7); break;
-		case "default-8": generate_default_n(8); break;
-		case "default-9": generate_default_n(9); break;
-		case "fail-background": generate_fail_background(); break;
-		case "followpoint-0": generate_followpoint(0); break;
-		case "followpoint-1": generate_followpoint(1); break;
-		case "followpoint-2": generate_followpoint(2); break;
-		case "followpoint-3": generate_followpoint(3); break;
-		case "followpoint-4": generate_followpoint(4); break;
-		case "followpoint-5": generate_followpoint(5); break;
-		case "followpoint-6": generate_followpoint(6); break;
-		case "followpoint-7": generate_followpoint(7); break;
-		case "followpoint-8": generate_followpoint(8); break;
-		case "followpoint-9": generate_followpoint(9); break;
-		case "followpoint-10": generate_followpoint(10); break;
-		case "followpoint-11": generate_followpoint(11); break;
-		case "followpoint-12": generate_followpoint(12); break;
-		case "followpoint-13": generate_followpoint(13); break;
-		case "followpoint-14": generate_followpoint(14); break;
-		case "followpoint-15": generate_followpoint(15); break;
-		case "go": generate_count("go"); break;
-		case "hit0": generate_hitburst_ranking("0"); break;
-		case "hit50": generate_hitburst_ranking("50"); break;
-		case "hit100": generate_hitburst_ranking("100"); break;
-		case "hit100k": generate_hitburst_ranking("100k"); break;
-		case "hit300": generate_hitburst_ranking("300"); break;
-		case "hit300g": generate_hitburst_ranking("300g"); break;
-		case "hit300k": generate_hitburst_ranking("300k"); break;
-		case "hit0-0": generate_hitburst_ingame("0"); break;
-		case "hit50-0": generate_hitburst_ingame("50"); break;
-		case "hit100-0": generate_hitburst_ingame("100"); break;
-		case "hit100k-0": generate_hitburst_ingame("100"); break;
-		case "hitcircle": generate_hitcircle(); break;
-		case "hitcircleoverlay": generate_hitcircleoverlay(); break;
-		case "inputoverlay-background": generate_inputoverlay_background(); break;
-		case "inputoverlay-key": generate_inputoverlay_key(); break;
-		case "lighting": generate_lighting(); break;
-		case "menu-back": generate_menu_back(); break;
-		case "menu-button-background": generate_menu_button_background(); break;
-		case "mode-fruits": generate_mode_m("fruits"); break;
-		case "mode-mania": generate_mode_m("mania"); break;
-		case "mode-osu": generate_mode_m("osu"); break;
-		case "mode-taiko": generate_mode_m("taiko"); break;
-		case "mode-fruits-med": generate_mode_m_med("fruits"); break;
-		case "mode-mania-med": generate_mode_m_med("mania"); break;
-		case "mode-osu-med": generate_mode_m_med("osu"); break;
-		case "mode-taiko-med": generate_mode_m_med("taiko"); break;
-		case "mode-fruits-small": generate_mode_m_small("fruits"); break;
-		case "mode-mania-small": generate_mode_m_small("mania"); break;
-		case "mode-osu-small": generate_mode_m_small("osu"); break;
-		case "mode-taiko-small": generate_mode_m_small("taiko"); break;
-		case "pause-back": generate_pause_button("Back"); break;
-		case "pause-continue": generate_pause_button("Continue"); break;
-		case "pause-replay": generate_pause_button("Watch replay"); break;
-		case "pause-retry": generate_pause_button("Retry"); break;
-		case "pause-overlay": generate_pause_overlay(); break;
-		case "play-skip": generate_play_skip(); break;
-		case "ranking-graph": generate_ranking_graph(); break;
-		case "ranking-panel": generate_ranking_panel(); break;
-		case "ranking-perfect": generate_ranking_perfect(); break;
-		case "ranking-title": generate_ranking_title(); break;
-		case "ranking-a": generate_grade_letter("A"); break;
-		case "ranking-b": generate_grade_letter("B"); break;
-		case "ranking-c": generate_grade_letter("C"); break;
-		case "ranking-d": generate_grade_letter("D"); break;
-		case "ranking-s": generate_grade_letter("S"); break;
-		case "ranking-sh": generate_grade_letter("SH"); break;
-		case "ranking-x": generate_grade_letter("SS"); break;
-		case "ranking-xh": generate_grade_letter("SSH"); break;
-		case "ranking-a-small": generate_grade_letter_small("A"); break;
-		case "ranking-b-small": generate_grade_letter_small("B"); break;
-		case "ranking-c-small": generate_grade_letter_small("C"); break;
-		case "ranking-d-small": generate_grade_letter_small("D"); break;
-		case "ranking-s-small": generate_grade_letter_small("S"); break;
-		case "ranking-sh-small": generate_grade_letter_small("SH"); break;
-		case "ranking-x-small": generate_grade_letter_small("SS"); break;
-		case "ranking-xh-small": generate_grade_letter_small("SSH"); break;
-		case "ready": generate_count("ready"); break;
-		case "reversearrow": generate_reversearrow(); break;
-		case "section-fail": generate_section_text("Fail"); break;
-		case "section-pass": generate_section_text("Pass"); break;
-		case "score-0": generate_score_n(0); break;
-		case "score-1": generate_score_n(1); break;
-		case "score-2": generate_score_n(2); break;
-		case "score-3": generate_score_n(3); break;
-		case "score-4": generate_score_n(4); break;
-		case "score-5": generate_score_n(5); break;
-		case "score-6": generate_score_n(6); break;
-		case "score-7": generate_score_n(7); break;
-		case "score-8": generate_score_n(8); break;
-		case "score-9": generate_score_n(9); break;
-		case "score-comma": generate_score_n(","); break;
-		case "score-dot": generate_score_n("."); break;
-		case "score-percent": generate_score_n("%"); break;
-		case "score-x": generate_score_n("x"); break;
-		case "scorebar-bg": generate_scorebar_bg(); break;
-		case "scorebar-colour": generate_scorebar_colour(); break;
-		case "scoreentry-0": generate_scoreentry_n(0); break;
-		case "scoreentry-1": generate_scoreentry_n(1); break;
-		case "scoreentry-2": generate_scoreentry_n(2); break;
-		case "scoreentry-3": generate_scoreentry_n(3); break;
-		case "scoreentry-4": generate_scoreentry_n(4); break;
-		case "scoreentry-5": generate_scoreentry_n(5); break;
-		case "scoreentry-6": generate_scoreentry_n(6); break;
-		case "scoreentry-7": generate_scoreentry_n(7); break;
-		case "scoreentry-8": generate_scoreentry_n(8); break;
-		case "scoreentry-9": generate_scoreentry_n(9); break;
-		case "scoreentry-comma": generate_scoreentry_n(","); break;
-		case "scoreentry-dot": generate_scoreentry_n("."); break;
-		case "scoreentry-percent": generate_scoreentry_n("%"); break;
-		case "scoreentry-x": generate_scoreentry_n("x"); break;
-		case "selection-mode": generate_selection_mode_button("Mode", false); break;
-		case "selection-mode-over": generate_selection_mode_button("Mode", true); break;
-		case "selection-mods": generate_selection_mode_button("Mods", false); break;
-		case "selection-mods-over": generate_selection_mode_button("Mods", true); break;
-		case "selection-random": generate_selection_mode_button("Random", false); break;
-		case "selection-random-over": generate_selection_mode_button("Random", true); break;
-		case "selection-options": generate_selection_mode_button("Options", false); break;
-		case "selection-options-over": generate_selection_mode_button("Options", true); break;
-		case "selection-mod-autoplay": generate_mod_icon("AT"); break;
-		case "selection-mod-cinema": generate_mod_icon("CN"); break;
-		case "selection-mod-doubletime": generate_mod_icon("DT"); break;
-		case "selection-mod-easy": generate_mod_icon("EZ"); break;
-		case "selection-mod-fadein": generate_mod_icon("FI"); break;
-		case "selection-mod-flashlight": generate_mod_icon("FL"); break;
-		case "selection-mod-halftime": generate_mod_icon("HT"); break;
-		case "selection-mod-hardrock": generate_mod_icon("HR"); break;
-		case "selection-mod-hidden": generate_mod_icon("HD"); break;
-		case "selection-mod-key1": generate_mod_icon("1K"); break;
-		case "selection-mod-key2": generate_mod_icon("2K"); break;
-		case "selection-mod-key3": generate_mod_icon("3K"); break;
-		case "selection-mod-key4": generate_mod_icon("4K"); break;
-		case "selection-mod-key5": generate_mod_icon("5K"); break;
-		case "selection-mod-key6": generate_mod_icon("6K"); break;
-		case "selection-mod-key7": generate_mod_icon("7K"); break;
-		case "selection-mod-key8": generate_mod_icon("8K"); break;
-		case "selection-mod-key9": generate_mod_icon("9K"); break;
-		case "selection-mod-keycoop": generate_mod_icon("2P"); break;
-		case "selection-mod-mirror": generate_mod_icon("MR"); break;
-		case "selection-mod-nightcore": generate_mod_icon("NC"); break;
-		case "selection-mod-nofail": generate_mod_icon("NF"); break;
-		case "selection-mod-perfect": generate_mod_icon("PF"); break;
-		case "selection-mod-random": generate_mod_icon("RD"); break;
-		case "selection-mod-relax": generate_mod_icon("RX"); break;
-		case "selection-mod-relax2": generate_mod_icon("AP"); break;
-		case "selection-mod-scorev2": generate_mod_icon("v2"); break;
-		case "selection-mod-spunout": generate_mod_icon("SO"); break;
-		case "selection-mod-suddendeath": generate_mod_icon("SD"); break;
-		case "selection-mod-target": generate_mod_icon("TP"); break;
-		case "selection-mod-touchdevice": generate_mod_icon("TD"); break;
-		case "selection-tab": generate_selection_tab(); break;
-		case "sliderb0": generate_sliderb(); break;
-		case "sliderfollowcircle": generate_sliderfollowcircle(); break;
-		case "sliderscorepoint": generate_sliderscorepoint(); break;
-		case "spinner-approachcircle": generate_spinner_approachcircle(); break;
-		case "spinner-clear": generate_spinner_clear(); break;
-		case "spinner-circle": generate_spinner_circle(); break;
-		case "spinner-metre": generate_spinner_metre(); break;
-		case "spinner-rpm": generate_spinner_rpm(); break;
-		case "star": generate_star(); break;
+	function draw_spinner_1() {
+		canvas = document.getElementById("preview_spinner_1");
+		ctx = canvas.getContext("2d");
+		ctx.clearRect(0,0,canvas.width,canvas.height);
+		var spinner_preview_diameter = canvas.width-10;
+		
+		ctx.lineWidth = 4;
+		ctx.strokeStyle = "#FFFFFF";
+		
+		ctx.beginPath(); // outer circle
+		ctx.arc(canvas.width/2, canvas.height/2, (spinner_preview_diameter-ctx.lineWidth)/2, 0, 2*Math.PI);
+		ctx.stroke();
+		ctx.closePath();
+		ctx.beginPath(); // inner circle
+		ctx.arc(canvas.width/2, canvas.height/2, 5, 0, 2*Math.PI);
+		ctx.stroke();
+		ctx.closePath();
+		
+		ctx.strokeStyle = get_color_hex(main_color_id);
+		
+		for(var i=0 ; i<18 ; i++) { // approach circle
+			ctx.beginPath();
+			ctx.arc(canvas.width/2, canvas.height/2, (spinner_preview_diameter-ctx.lineWidth)/2/2, (20*i)/180*Math.PI, (20*i+15)/180*Math.PI);
+			ctx.stroke();
+			ctx.closePath();
+		}
+		
+		ctx.beginPath(); // spinner metre
+		ctx.arc(canvas.width/2, canvas.height/2, (spinner_preview_diameter-4*ctx.lineWidth)/2, 0, 2*Math.PI);
+		ctx.stroke();
+		ctx.closePath();
 	}
 	
-	/* generate 1x version */
-	// create the canvas
-	new_element = document.createElement("canvas");
-	canvas_name = elements_2x[element_id][1];
-	new_element.id = canvas_name; // give him a id
-	document.getElementById("generated_elements_1x").appendChild(new_element);
-	// get the canvas
-	canvas = document.getElementById(canvas_name);
-	ctx = canvas.getContext("2d");
-	// resize the canvas
-	canvas.width = document.getElementById(canvas_name+"_2x").width/2;
-	canvas.height = document.getElementById(canvas_name+"_2x").height/2;
-	// clear the canvas
-	ctx.clearRect(0, 0, canvas.width, canvas.height);
-	// copy
-	ctx.drawImage(document.getElementById(canvas_name+"_2x"), 0, 0, canvas.width, canvas.height);
+	function draw_spinner_2() {
+		canvas = document.getElementById("preview_spinner_2");
+		ctx = canvas.getContext("2d");
+		ctx.clearRect(0,0,canvas.width,canvas.height);
+		var spinner_preview_diameter = (canvas.width*0.7)-10;
+		
+		ctx.lineWidth = 4;
+		ctx.strokeStyle = "#FFFFFF";
+		
+		for(var i=0 ; i<2 ; i++) { // outer circle
+			ctx.beginPath();
+			ctx.arc(canvas.width/2, canvas.height/2, (spinner_preview_diameter-ctx.lineWidth)/2, (180*i)/180*Math.PI, (180*i+150)/180*Math.PI);
+			ctx.stroke();
+			ctx.closePath();
+		}
+		ctx.beginPath(); // inner circle
+		ctx.arc(canvas.width/2, canvas.height/2, 3, 0, 2*Math.PI);
+		ctx.stroke();
+		ctx.closePath();
+		
+		ctx.strokeStyle = get_color_hex(main_color_id);
+		
+		ctx.beginPath(); // approach circle
+		ctx.arc(canvas.width/2, canvas.height/2, (spinner_preview_diameter-ctx.lineWidth)/2/2, 0, 2*Math.PI);
+		ctx.stroke();
+		ctx.closePath();
+	}
+	
+	function draw_scorebar(with_numbers) {
+		canvas = document.getElementById("preview_scorebar");
+		ctx = canvas.getContext("2d");
+		
+		ctx.clearRect(0,0,canvas.width,canvas.height);
+		
+		/* setup */ 
+		var bar_x = 34;
+		var bar_y = 11;
+		var bar_width = 380;
+		var bar_height = 14;
+		var numbers_start = bar_x; // x pos of the num 0
+		var numbers_step = bar_width/10; // distance between 2 numbers
+		
+		/* HP text */ 
+		// init ctx
+		ctx.font = "16px "+font_normal;
+		ctx.textAlign = "left";
+		ctx.textBaseline = "top"; // 
+		ctx.fillStyle = gradient;
+		ctx.shadowOffsetX = 0;
+		ctx.shadowOffsetY = 0;
+		ctx.shadowBlur = 2;
+		ctx.shadowColor = "rgba(0,0,0,0.8)";
+		ctx.fillText("HP", 2, 11);
+		
+		/* bar */
+		draw_rounded_rect(
+			"preview_scorebar", /* canvas name */
+			bar_x, /* x */
+			bar_y, /* y */
+			bar_width, /* w */
+			bar_height, /* h */
+			bar_height/2, /* border radius */
+			0, /* border_size */
+			"linear", /* gradient_style */
+			90, /* gradient_direction */
+			get_color_hex(main_color_id), /* color1 */
+			add_color(get_color_hex(main_color_id)+"FF", "#FFFFFF33"), /* color2 */
+			"none", /* shadow_style */
+			0, /* shadow_blur */
+			"rgba(0,0,0,0.5)", /* shadow_color */
+		);
+		
+		/* numbers */
+		if(with_numbers) {
+			// setup
+			// get gradient
+			x1 = 0;
+			y1 = 0;
+			x2 = 0;
+			y2 = canvas.height;
+			gradient = ctx.createLinearGradient(x1, y1, x2, y2);
+			gradient.addColorStop(0, "rgba(255,255,255,1)");
+			gradient.addColorStop(1, "rgba(240,240,240,1)");
+			// init ctx
+			ctx.fillStyle = gradient;
+			ctx.strokeStyle = gradient;
+			ctx.shadowOffsetX = 0;
+			ctx.shadowOffsetY = 0;
+			ctx.shadowBlur = 2;
+			ctx.shadowColor = "rgba(0,0,0,0.8)";
+			ctx.font = "12px "+font_normal;
+			ctx.textBaseline = "top";
+			ctx.textAlign = "center";
+			ctx.lineWidth = 2;
+			ctx.lineCap = "round";
+			// draw
+			for(var i=0 ; i<=10 ; i++) {
+				ctx.beginPath(); // 10bar
+				ctx.moveTo(numbers_start+i*numbers_step, 29);
+				ctx.lineTo(numbers_start+i*numbers_step, 29+3);
+				ctx.stroke();
+				ctx.closePath();
+				
+				if(i<10) { // 5 tick
+					ctx.beginPath(); // 10 tick
+					ctx.moveTo(numbers_start+(i+0.5)*numbers_step, 29);
+					ctx.lineTo(numbers_start+(i+0.5)*numbers_step, 29+2);
+					ctx.stroke();
+					ctx.closePath();
+				}
+						
+				ctx.fillText((i*10).toString(), numbers_start+i*numbers_step, 36);
+			}
+		}
+		
+	}
+	
+	var canvas_name, canvas, ctx;
+	
+	// hitcircle
+	for(var i=1 ; i<=4 ; i++) { // hitcircle
+		canvas_name = "preview_circle_"+i.toString()
+	    canvas = document.getElementById(canvas_name);
+		ctx = canvas.getContext("2d");
+		ctx.clearRect(0,0,canvas.width,canvas.height);
+		draw_element(canvas_name, "hitcircle", [i-1,true]);
+		draw_element(canvas_name, "default-1", [canvas.height/256*102]);
+		draw_element(canvas_name, "hitcircleoverlay", [i-1]);
+	}
+	
+	// spinners
+	draw_spinner_1();
+	draw_spinner_2();
+	
+	// cursors colors (dots)
+	// dot 1
+	if(get_color_data(main_color_id)[1]>=7 && get_color_data(main_color_id)[1]<=9) { // lighter cursor for 700 800 900 shades
+		document.getElementById("preview_cursor_color_1").style.color = get_color_hex(get_color_id(get_color_data(main_color_id)[0],6)); // set to 600 shade
+	} else {
+		document.getElementById("preview_cursor_color_1").style.color = get_color_hex(main_color_id);
+	}
+	// dot 2
+	if(get_color_data(main_color_id)[1]>=7 && get_color_data(main_color_id)[1]<=9) { // lighter cursor for 700 800 900 shades
+		document.getElementById("preview_cursor_color_2").style.color = get_complementary_color_hex(get_color_id(get_color_data(main_color_id)[0],6)); // set to 600 shade
+	} else {
+		document.getElementById("preview_cursor_color_2").style.color = get_complementary_color_hex(main_color_id);
+	}
+	
+	// scorebar
+	draw_scorebar(scorebar_type);
+	
 }
 
 function generate_skin_ini() {
@@ -3171,8 +3585,8 @@ function generate_skin_ini() {
 		}
 	}
 	
-	function name(color_id) { // return the full skin name
-		return "- Project 4";
+	function name() { // return the full skin name
+		return "Dark Minimalist Skin "+get_skin_id();
 	}
 	
 	function slider_border_color(color_id) {
@@ -3213,6 +3627,7 @@ function generate_skin_ini() {
 	];
 	
 	document.getElementById(div_name).innerHTML = ""; // clear
+	document.getElementById(div_name).innerHTML += "// Dark Minimalist Skin by Corne2Plum3 ver."+version+"\n\n";
 	document.getElementById(div_name).innerHTML += "[General]\n";
 	for(var i=0 ; i<data_general.length ; i++) {
 		document.getElementById(div_name).innerHTML += data_general[i][0]+": "+data_general[i][1]+"\n";
@@ -3245,10 +3660,9 @@ function export_skin() {
 	// refresh canvas and skin.ini
 	generate_canvas();
 	generate_skin_ini();
-	var skin_name = "- test "+main_color_id.toString();
 	
 	let jsZip = new JSZip(); // constructor for the ZIP
-	/*
+	
 	// img elements
 	for(var i=0 ; i<elements_2x.length ; i++) {
 		if(elements_2x[i][1]!=null) {
@@ -3265,7 +3679,6 @@ function export_skin() {
 	// skin.ini
 	var skin_ini_content = document.getElementById("skin_ini_content").innerText;
 	jsZip.file("skin.ini", skin_ini_content);
-	*/
 	// hitsounds
 	
 	
@@ -3274,23 +3687,8 @@ function export_skin() {
 	jsZip.generateAsync({type:"blob"}).then(function (content) {
 		content = URL.createObjectURL(content);
 		// define the name
-		const forbidden_files_names = ["CON","PRN","AUX","NUL","COM1","COM2","COM3","COM4","COM5","COM6","COM7","COM8","COM9","LPT1","LPT2","LPT3","LPT4","LPT5","LPT6","LPT7","LPT8","LPT9"]; // forbidden Windows files names
-		const forbidden_caracteres = '<>:«,/\\|?*"'; // caracters who can appears in a file name
-		var name = "";
-			if(forbidden_files_names.indexOf(skin_name) != -1) { // if in the forbidden list names
-				skin_name = "'" + skin_name + "'";
-			}
-			for(var i=0 ; i<skin_name.length ; i++) {
-				if(forbidden_caracteres.indexOf(skin_name[i]) == -1) { // if in the allowed_caracteres_list
-					name += skin_name[i];
-				} else {
-					name += "_";
-				}
-			}
-			if(name[skin_name.length-1] == " " || name[skin_name.length-1] == ".") { // last caracter
-				name[skin_name.length-1] = "_";
-			}
-			name += ".zip"; // add .zip at the end
+		name = "Dark minimalist skin #"+get_skin_id().toString();
+		name += ".zip"; // add .zip at the end
 		download(content, name); // already written above
 	});
 }
